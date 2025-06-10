@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AWS Mock Exam",
+    "type": "object",
+    "required": ["title", "questions"],
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "questions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "question", "options", "answer"],
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "question": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object",
+              "minProperties": 2,
+              "maxProperties": 5,
+              "additionalProperties": {
+                "type": "string"
+              },
+              "patternProperties": {
+                "^[A-E]$": {
+                  "type": "string"
+                }
+              }
+            },
+            "answer": {
+              "type": "string",
+              "pattern": "^[A-E]$"
+            }
+          }
+        }
+      }
+    }
+  }
+  
