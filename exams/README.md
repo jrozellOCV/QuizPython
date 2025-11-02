@@ -35,12 +35,20 @@ Each exam file should be a JSON file with the following structure:
 
 ## Current Exams
 
-- `aws_mock_exam.json` - AWS Cloud Practitioner Mock Exam (70 questions)
-- `new_mockExam.json` - AWS Cloud Practitioner Practice Exam 2 (50 questions)
+### Practice Exams
+- `exam_1.json` - Practice Exam 1 (50 questions)
+- `exam_2.json` - Practice Exam 2 (50 questions)
+- `exam_3.json` - Practice Exam 3 (50 questions)
+- `exam_4.json` - Practice Exam 4 (50 questions)
+
+### Tutorials Dojo Exams
+- `tDojo_exam_1.json` - Tutorials Dojo Exam 1 (65 questions)
+- `tDojo_exam_2.json` - Tutorials Dojo Exam 2 (65 questions)
+- `tDojo_exam_3.json` - Tutorials Dojo Exam 3 (65 questions)
+- `tDojo_exam_1_missed.json` - Tutorials Dojo Exam 1 Missed Questions (21 questions)
 
 ## Notes
 
-- Questions can have 4 or 5 options (A, B, C, D, E)
 - The application automatically detects the number of options
 - Exam files are automatically loaded when the application starts
 - Session data is saved separately in the `data/sessions/` folder

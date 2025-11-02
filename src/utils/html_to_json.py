@@ -124,7 +124,6 @@ def parse_html_exam(html_text: str, missed_only: bool = False) -> Tuple[str, Lis
                             option_items = options_list.find_all('li')
                             options_dict: Dict[str, str] = {}
                             correct_answers = []
-                            option_letters = ['A', 'B', 'C', 'D', 'E']
                             
                             # Check if it's multi-choice by input type
                             first_input = options_list.find('input')
@@ -135,16 +134,19 @@ def parse_html_exam(html_text: str, missed_only: bool = False) -> Tuple[str, Lis
                             
                             option_index = 0
                             for li in option_items:
-                                # Check if this is a correct answer
-                                if 'wpProQuiz_answerCorrect' in li.get('class', []):
-                                    correct_answers.append(option_letters[option_index])
-                                
                                 # Extract option text
                                 label = li.find('label')
                                 if label:
                                     option_text = clean_html_text(label.get_text())
                                     if option_text:
-                                        options_dict[option_letters[option_index]] = option_text
+                                        # Generate option letter dynamically
+                                        option_letter = chr(ord('A') + option_index)
+                                        options_dict[option_letter] = option_text
+                                        
+                                        # Check if this is a correct answer
+                                        if 'wpProQuiz_answerCorrect' in li.get('class', []):
+                                            correct_answers.append(option_letter)
+                                        
                                         option_index += 1
                             
                             # Create question object
