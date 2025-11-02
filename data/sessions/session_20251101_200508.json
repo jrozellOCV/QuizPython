@@ -1,0 +1,16 @@
+{
+  "session_date": "2025-11-01T20:05:08.464061",
+  "exam_title": "Practice Exam 4 - Study Wrong Answers",
+  "total_questions": 17,
+  "quiz_mode": {
+    "score": 0,
+    "total_answered": 0,
+    "wrong_answers": []
+  },
+  "timer_data": {
+    "elapsed_seconds": 718,
+    "completed": false,
+    "auto_saved": true,
+    "emergency_saved": true
+  }
+}

@@ -10,14 +10,15 @@ A modern, interactive quiz application built with Python and PyQt6, designed to 
 
 ## Features
 
-### Quiz Mode
+### Quiz Modes & Options
 - Interactive multiple-choice questions with immediate feedback
+- Configurable quiz options for different study approaches
 - Progress tracking with a visual progress bar
 - Score tracking and performance statistics
 - Session save/resume functionality - pause and resume study sessions at any time
 - **Pause functionality** - Temporarily hide questions and answers while pausing the timer
 - Timer functionality to track study time
-- Shuffle questions option for varied practice
+- Multiple quiz modes: Shuffle questions, Practice mode, and Hide answers during quiz
 - Review of incorrect answers from completed sessions
 - Test selection dialog with tabs for easy navigation
 - Results saving system with detailed performance metrics
@@ -216,6 +217,84 @@ Toggle between light and dark themes for comfortable studying in any lighting co
 - Or use the keyboard shortcut **Ctrl+D**
 - Your preference persists throughout the session
 
+## Quiz Options
+
+When starting a new test from the "New Test" tab, you can configure several options to customize your quiz experience:
+
+### Shuffle Questions
+
+**Location**: Checkbox in the "New Test" tab
+
+**Description**: Randomizes the order of questions in the exam, providing a different question sequence each time you take the quiz.
+
+**Use Cases**:
+- Prevent memorizing question order through repetition
+- Simulate varied exam conditions
+- Focus on content knowledge rather than question sequence
+
+**How It Works**:
+- Questions are shuffled before the quiz starts
+- Each new quiz session will have a different random order
+- Resuming a session maintains the original shuffled order
+
+### Practice Mode
+
+**Location**: Checkbox labeled "Practice mode (no timer, free navigation)"
+
+**Description**: A relaxed study mode without timer restrictions and with flexible navigation between questions.
+
+**Features**:
+- **No Timer**: Timer is disabled, allowing you to study at your own pace
+- **Free Navigation**: Move between questions freely without requiring answer confirmation
+- **Show Answer Button**: Instead of "Confirm Answer", shows "Show Answer" button for immediate feedback
+- **Unlimited Navigation**: Jump between questions without restrictions
+- **Question Timeline**: Visual timeline shows all questions and allows jumping to specific questions (number keys 1-9)
+
+**Best For**:
+- Initial learning and exploration
+- Studying without time pressure
+- Reviewing material at your own pace
+- Practicing specific questions repeatedly
+
+**Note**: Practice mode sessions can be saved and resumed like regular sessions, but scores and timers are not tracked for progress comparison.
+
+### Hide Answers During Quiz
+
+**Location**: Checkbox labeled "Hide answers during quiz"
+
+**Description**: Keeps all answers hidden during the quiz and reveals them all at once after completing the entire exam.
+
+**Features**:
+- Answers are not shown immediately after selecting an option
+- No immediate feedback during the quiz
+- All answers are automatically revealed when you complete the quiz
+- Navigate through all questions with answers visible for review
+
+**How It Works**:
+1. Select answers normally throughout the quiz
+2. Answers remain hidden - no immediate feedback
+3. When you complete all questions, all answers are revealed automatically
+4. Navigate through questions to review your selections alongside correct answers
+5. Your score is calculated based on your selections
+
+**Best For**:
+- Simulating real exam conditions where you don't get immediate feedback
+- Testing your knowledge without hints
+- Practicing under exam-like conditions
+- Building confidence with full question sets
+
+**Combining Options**:
+- **Shuffle + Hide Answers**: Great for exam simulation - randomized questions with no feedback
+- **Practice Mode + Shuffle**: Learn material in different orders without time pressure
+- **Practice Mode + Hide Answers**: Study without timer but still test yourself without hints
+
+### Option Availability
+
+- **Shuffle Questions**: Available when starting a new test
+- **Practice Mode**: Available when starting a new test
+- **Hide Answers During Quiz**: Available when starting a new test
+- **Note**: These options are not available when resuming a session - the original settings from when the session was created are preserved
+
 ### Troubleshooting
 
 If you encounter any issues:
@@ -250,7 +329,6 @@ Here are some small but impactful improvements that could enhance the applicatio
 - **Cross-Session Progress Tracking**: Track improvement across multiple study sessions
 - **Export Results**: Export quiz results to CSV or PDF format for external analysis
 - **Question Search/Filter**: Search and filter questions by topic or keywords
-- **Practice Mode**: A mode without timer restrictions and immediate answer feedback
 - **Question Bookmarks**: Bookmark difficult questions for focused review
 - **Performance Analytics Dashboard**: Visual dashboard showing overall study statistics and weak areas
 

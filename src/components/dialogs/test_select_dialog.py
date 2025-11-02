@@ -17,6 +17,8 @@ class TestSelectDialog(QDialog):
         self.selected_session = None
         self.selected_result = None
         self.shuffle_enabled = False
+        self.practice_mode_enabled = False
+        self.show_answer_at_end_enabled = False
         self.styles = Styles()
         self.colors = self.styles.colors
         
@@ -153,6 +155,12 @@ class TestSelectDialog(QDialog):
         self.test_list.itemClicked.connect(self.on_test_selected)
         layout.addWidget(self.test_list)
         
+        # Options container
+        options_container = QWidget()
+        options_layout = QVBoxLayout(options_container)
+        options_layout.setContentsMargins(0, 0, 0, 0)
+        options_layout.setSpacing(12)
+        
         # Shuffle option
         shuffle_container = QWidget()
         shuffle_layout = QHBoxLayout(shuffle_container)
@@ -183,8 +191,73 @@ class TestSelectDialog(QDialog):
         self.shuffle_checkbox.stateChanged.connect(self.on_shuffle_toggled)
         shuffle_layout.addWidget(self.shuffle_checkbox)
         shuffle_layout.addStretch()
+        options_layout.addWidget(shuffle_container)
         
-        layout.addWidget(shuffle_container)
+        # Practice mode option
+        practice_container = QWidget()
+        practice_layout = QHBoxLayout(practice_container)
+        practice_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.practice_mode_checkbox = QCheckBox("Practice mode (no timer, free navigation)")
+        self.practice_mode_checkbox.setFont(QFont('Helvetica', 12))
+        self.practice_mode_checkbox.setStyleSheet(f"""
+            QCheckBox {{
+                color: {self.colors['text']};
+                spacing: 8px;
+            }}
+            QCheckBox::indicator {{
+                width: 18px;
+                height: 18px;
+                border: 2px solid {self.colors['border']};
+                border-radius: 4px;
+                background-color: {self.colors['card']};
+            }}
+            QCheckBox::indicator:checked {{
+                background-color: {self.colors['primary']};
+                border-color: {self.colors['primary']};
+            }}
+            QCheckBox::indicator:hover {{
+                border-color: {self.colors['primary']};
+            }}
+        """)
+        self.practice_mode_checkbox.stateChanged.connect(self.on_practice_mode_toggled)
+        practice_layout.addWidget(self.practice_mode_checkbox)
+        practice_layout.addStretch()
+        options_layout.addWidget(practice_container)
+        
+        # Show answers at end option
+        show_answer_container = QWidget()
+        show_answer_layout = QHBoxLayout(show_answer_container)
+        show_answer_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.show_answer_at_end_checkbox = QCheckBox("Hide answers during quiz")
+        self.show_answer_at_end_checkbox.setFont(QFont('Helvetica', 12))
+        self.show_answer_at_end_checkbox.setStyleSheet(f"""
+            QCheckBox {{
+                color: {self.colors['text']};
+                spacing: 8px;
+            }}
+            QCheckBox::indicator {{
+                width: 18px;
+                height: 18px;
+                border: 2px solid {self.colors['border']};
+                border-radius: 4px;
+                background-color: {self.colors['card']};
+            }}
+            QCheckBox::indicator:checked {{
+                background-color: {self.colors['primary']};
+                border-color: {self.colors['primary']};
+            }}
+            QCheckBox::indicator:hover {{
+                border-color: {self.colors['primary']};
+            }}
+        """)
+        self.show_answer_at_end_checkbox.stateChanged.connect(self.on_show_answer_at_end_toggled)
+        show_answer_layout.addWidget(self.show_answer_at_end_checkbox)
+        show_answer_layout.addStretch()
+        options_layout.addWidget(show_answer_container)
+        
+        layout.addWidget(options_container)
         layout.addStretch()
         
         return tab
@@ -356,43 +429,31 @@ class TestSelectDialog(QDialog):
                 self.sessions_list.addItem(item)
                 return
             
-            # Check for crashed sessions (incomplete sessions)
-            crashed_sessions = []
-            completed_sessions = []
-            
+            # Group by exam title
+            exams_dict = {}
             for session in sessions:
-                timer_data = session.get('timer_data', {})
-                if timer_data.get('completed', True) == False:
-                    crashed_sessions.append(session)
-                else:
-                    completed_sessions.append(session)
+                exam_title = session.get('exam_title', 'Unknown Exam')
+                if exam_title not in exams_dict:
+                    exams_dict[exam_title] = []
+                exams_dict[exam_title].append(session)
             
-            # Add crashed sessions first (most recent)
-            if crashed_sessions:
-                crashed_item = QListWidgetItem("⚠️ INCOMPLETE SESSIONS (May have crashed)")
-                crashed_item.setFlags(Qt.ItemFlag.NoItemFlags)
+            # Sort exam titles alphabetically
+            sorted_exam_titles = sorted(exams_dict.keys())
+            
+            # Add sessions grouped by exam
+            for exam_title in sorted_exam_titles:
+                # Add header for exam
+                header_item = QListWidgetItem(f"📚 {exam_title}")
+                header_item.setFlags(Qt.ItemFlag.NoItemFlags)
                 bold_font = QFont()
                 bold_font.setBold(True)
-                crashed_item.setFont(bold_font)
-                crashed_item.setForeground(QBrush(QColor("#dc2626")))
-                self.sessions_list.addItem(crashed_item)
+                header_item.setFont(bold_font)
+                header_item.setForeground(QBrush(QColor(self.colors.get('primary', '#3b82f6'))))
+                self.sessions_list.addItem(header_item)
                 
-                for session in crashed_sessions:
-                    self.add_session_item(session, is_crashed=True)
-            
-            # Add completed sessions
-            if completed_sessions:
-                if crashed_sessions:
-                    completed_item = QListWidgetItem("✅ COMPLETED SESSIONS")
-                    completed_item.setFlags(Qt.ItemFlag.NoItemFlags)
-                    bold_font = QFont()
-                    bold_font.setBold(True)
-                    completed_item.setFont(bold_font)
-                    completed_item.setForeground(QBrush(QColor("#059669")))
-                    self.sessions_list.addItem(completed_item)
-                
-                for session in completed_sessions:
-                    self.add_session_item(session, is_crashed=False)
+                # Add each session
+                for session in exams_dict[exam_title]:
+                    self.add_session_item(session)
                 
         except Exception as e:
             print(f"Error loading sessions: {e}")
@@ -483,7 +544,7 @@ class TestSelectDialog(QDialog):
             self.start_button.setEnabled(True)
             self.start_button.setText("Review Answers")
     
-    def add_session_item(self, session, is_crashed=False):
+    def add_session_item(self, session):
         """Add a session item to the list"""
         item = QListWidgetItem()
         
@@ -507,20 +568,44 @@ class TestSelectDialog(QDialog):
         else:
             timer_info = "Time: Not tracked"
         
-        # Add crash indicator
-        crash_indicator = "🔄 CRASHED - Resume?" if is_crashed else ""
+        # Check session status with priority order
+        timer_data = session.get('timer_data', {})
+        status_icon = ""
+        status_text = ""
+        status_color = None
         
-        display_text = f"{session['exam_title']}\n{date_str}\n{progress_text}\n{timer_info}"
-        if crash_indicator:
-            display_text = f"{crash_indicator}\n{display_text}"
+        # Priority: Completed > Quit > Emergency > Auto-saved > Incomplete
+        if timer_data.get('completed', False):
+            status_icon = "✅"
+            status_text = "Completed"
+            status_color = "#059669"  # Green
+        elif timer_data.get('quit_by_user', False):
+            status_icon = "🚪"
+            status_text = "Exited"
+            status_color = "#6b7280"  # Gray
+        elif timer_data.get('emergency_saved', False):
+            status_icon = "⚠️"
+            status_text = "Emergency Saved"
+            status_color = "#dc2626"  # Red
+        elif timer_data.get('auto_saved', False):
+            status_icon = "💾"
+            status_text = "Auto-saved"
+            status_color = "#3b82f6"  # Blue
+        else:
+            # Default to incomplete if no flags are set
+            status_icon = "⏸"
+            status_text = "Incomplete"
+            status_color = "#f59e0b"  # Amber
+        
+        # Build display text with status
+        display_text = f"{status_icon} {status_text}\n{date_str}\n{progress_text}\n{timer_info}"
         
         item.setText(display_text)
         item.setData(Qt.ItemDataRole.UserRole, session)
         
-        # Style crashed sessions differently
-        if is_crashed:
-            # Note: QListWidgetItem doesn't have setStyleSheet, styling is handled by QListWidget
-            pass
+        # Apply status color if available
+        if status_color:
+            item.setForeground(QBrush(QColor(status_color)))
         
         self.sessions_list.addItem(item)
     
@@ -545,6 +630,14 @@ class TestSelectDialog(QDialog):
     def on_shuffle_toggled(self, state):
         """Handle shuffle checkbox toggle"""
         self.shuffle_enabled = state == Qt.CheckState.Checked.value
+    
+    def on_practice_mode_toggled(self, state):
+        """Handle practice mode checkbox toggle"""
+        self.practice_mode_enabled = state == Qt.CheckState.Checked.value
+    
+    def on_show_answer_at_end_toggled(self, state):
+        """Handle show answer at end checkbox toggle"""
+        self.show_answer_at_end_enabled = state == Qt.CheckState.Checked.value
     
     def clear_all_sessions(self):
         """Clear all previous sessions after confirmation"""
@@ -598,3 +691,11 @@ class TestSelectDialog(QDialog):
     def is_shuffle_enabled(self):
         """Return whether shuffle is enabled"""
         return self.shuffle_enabled
+    
+    def is_practice_mode_enabled(self):
+        """Return whether practice mode is enabled"""
+        return self.practice_mode_enabled
+    
+    def is_show_answer_at_end_enabled(self):
+        """Return whether show answer at end is enabled"""
+        return self.show_answer_at_end_enabled

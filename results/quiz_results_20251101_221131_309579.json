@@ -1,0 +1,78 @@
+{
+  "exam_info": {
+    "title": "Practice Exam 1 - Study Wrong Answers",
+    "total_questions": 21,
+    "shuffle_enabled": false,
+    "exam_file_path": "QuizPython/exams/exam_1.json"
+  },
+  "session_info": {
+    "completion_date": "2025-11-01T22:11:31.309755",
+    "time_taken": "00:11:22",
+    "time_taken_seconds": 682
+  },
+  "performance": {
+    "score": 17,
+    "total_answered": 21,
+    "accuracy_percentage": 80.95,
+    "completion_percentage": 100.0,
+    "incorrect_count": 4
+  },
+  "detailed_results": {
+    "correct_answers": 17,
+    "incorrect_answers": [
+      {
+        "question_id": 8,
+        "question": "What does AWS Snowball provide? (Choose TWO)",
+        "your_answer": "A hybrid cloud storage between on-premises environments and the AWS Cloud.; Secure transfer of large amounts of data into and out of the AWS.",
+        "correct_answer": "Built-in computing capabilities that allow customers to process data locally.; Secure transfer of large amounts of data into and out of the AWS."
+      },
+      {
+        "question_id": 31,
+        "question": "Which of the following services allows customers to manage their agreements with AWS?",
+        "your_answer": "AWS Certificate Manager.",
+        "correct_answer": "AWS Artifact."
+      },
+      {
+        "question_id": 32,
+        "question": "Which of the following are examples of AWS-Managed Services, where AWS is responsible for the operational and maintenance burdens of running the service? (Choose TWO)",
+        "your_answer": "Amazon DynamoDB.; Amazon Elastic Compute Cloud.",
+        "correct_answer": "Amazon DynamoDB.; Amazon Elastic MapReduce."
+      },
+      {
+        "question_id": 44,
+        "question": "What does the AWS Health Dashboard provide? (Choose TWO)",
+        "your_answer": "Recommendations for Cost Optimization.; Personalized view of AWS service health.",
+        "correct_answer": "Detailed troubleshooting guidance to address AWS events impacting your resources.; Personalized view of AWS service health."
+      }
+    ],
+    "questions_answered": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "incorrect_question_ids": [
+      8,
+      31,
+      32,
+      44
+    ]
+  }
+}

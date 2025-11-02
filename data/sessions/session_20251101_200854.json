@@ -1,0 +1,178 @@
+{
+  "session_date": "2025-11-01T20:08:54.464369",
+  "exam_title": "Practice Exam 1 - Review Mode",
+  "total_questions": 21,
+  "quiz_mode": {
+    "score": 0,
+    "total_answered": 0,
+    "wrong_answers": [
+      {
+        "correct_answer": "B",
+        "question": "You have noticed that several critical Amazon EC2 instances have been terminated. Which of the following AWS services would help you determine who took this action?",
+        "question_id": 3,
+        "your_answer": "D"
+      },
+      {
+        "correct_answer": "A",
+        "question": "Which statement is true regarding the AWS Shared Responsibility Model?",
+        "question_id": 5,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": "B",
+        "question": "You have set up consolidated billing for several AWS accounts. One of the accounts has purchased a number of reserved instances for 3 years. Which of the following is true regarding this scenario?",
+        "question_id": 6,
+        "your_answer": "D"
+      },
+      {
+        "correct_answer": [
+          "A",
+          "E"
+        ],
+        "question": "What does AWS Snowball provide? (Choose TWO)",
+        "question_id": 8,
+        "your_answer": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "correct_answer": "D",
+        "question": "Which of the following helps a customer view the Amazon EC2 billing activity for the past month?",
+        "question_id": 16,
+        "your_answer": "A"
+      },
+      {
+        "correct_answer": "C",
+        "question": "What do you gain from setting up consolidated billing for five different AWS accounts under another master account?",
+        "question_id": 17,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": [
+          "B",
+          "C"
+        ],
+        "question": "What should you do in order to keep the data on EBS volumes safe? (Choose TWO)",
+        "question_id": 18,
+        "your_answer": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "correct_answer": "D",
+        "question": "One of the most important AWS best-practices to follow is the cloud architecture principle of elasticity. How does this principle improve your architecture\u2019s design?",
+        "question_id": 19,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": [
+          "A",
+          "C"
+        ],
+        "question": "A startup company is operating on limited funds and is extremely concerned about cost overruns. Which of the below options can be used to notify the company when their monthly AWS bill exceeds $2000? (Choose TWO)",
+        "question_id": 20,
+        "your_answer": [
+          "C"
+        ]
+      },
+      {
+        "correct_answer": "C",
+        "question": "What does Amazon CloudFront use to distribute content to global users with low latency?",
+        "question_id": 21,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": "D",
+        "question": "You are working on a project that involves creating thumbnails of millions of images. Consistent uptime is not an issue, and continuous processing is not required. Which EC2 buying option would be the most cost-effective?",
+        "question_id": 29,
+        "your_answer": "C"
+      },
+      {
+        "correct_answer": "A",
+        "question": "Which of the following services allows customers to manage their agreements with AWS?",
+        "question_id": 31,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": [
+          "B",
+          "C"
+        ],
+        "question": "Which of the following are examples of AWS-Managed Services, where AWS is responsible for the operational and maintenance burdens of running the service? (Choose TWO)",
+        "question_id": 32,
+        "your_answer": [
+          "A",
+          "D"
+        ]
+      },
+      {
+        "correct_answer": "B",
+        "question": "Your company has a data store application that requires access to a NoSQL database. Which AWS database offering would meet this requirement?",
+        "question_id": 33,
+        "your_answer": "A"
+      },
+      {
+        "correct_answer": "B",
+        "question": "You have AWS Basic support, and you have discovered that some AWS resources are being used maliciously, and those resources could potentially compromise your data. What should you do?",
+        "question_id": 37,
+        "your_answer": "D"
+      },
+      {
+        "correct_answer": "D",
+        "question": "A company is planning to host an educational website on AWS. Their video courses will be streamed all around the world. Which of the following AWS services will help achieve high transfer speeds?",
+        "question_id": 40,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": "A",
+        "question": "What is the AWS service that enables AWS architects to manage infrastructure as code?",
+        "question_id": 42,
+        "your_answer": "B"
+      },
+      {
+        "correct_answer": "B",
+        "question": "Under the shared responsibility model, which of the following is the responsibility of AWS?",
+        "question_id": 43,
+        "your_answer": "C"
+      },
+      {
+        "correct_answer": [
+          "A",
+          "E"
+        ],
+        "question": "What does the AWS Health Dashboard provide? (Choose TWO)",
+        "question_id": 44,
+        "your_answer": [
+          "C",
+          "E"
+        ]
+      },
+      {
+        "correct_answer": [
+          "B",
+          "D"
+        ],
+        "question": "Which of the following is not a benefit of Amazon S3? (Choose TWO)",
+        "question_id": 47,
+        "your_answer": [
+          "A",
+          "D"
+        ]
+      },
+      {
+        "correct_answer": "D",
+        "question": "An organization has decided to purchase an Amazon EC2 Reserved Instance (RI) for three years in order to reduce costs. It is possible that the application workloads could change during the reservation period. What is the EC2 Reserved Instance (RI) type that will allow the company to exchange the purchased reserved instance for another reserved instance with higher computing power if they need to?",
+        "question_id": 50,
+        "your_answer": "A"
+      }
+    ]
+  },
+  "timer_data": {
+    "elapsed_seconds": 461,
+    "completed": false,
+    "auto_saved": true,
+    "emergency_saved": false
+  }
+}

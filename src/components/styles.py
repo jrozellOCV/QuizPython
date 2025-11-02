@@ -62,7 +62,7 @@ class Styles:
                     font-weight: bold;
                     font-size: 14px;
                     min-height: 44px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                 }}
                 QPushButton:hover {{
                     background-color: {self.colors['primary_dark']};
@@ -86,7 +86,7 @@ class Styles:
                     font-weight: bold;
                     font-size: 14px;
                     min-height: 44px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                 }}
                 QPushButton:hover {{
                     background-color: {self.colors['hover']};
@@ -112,7 +112,7 @@ class Styles:
                     font-weight: bold;
                     font-size: 14px;
                     min-height: 44px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                 }}
                 QPushButton:hover {{
                     background-color: {self.colors['success_dark']};
@@ -128,7 +128,7 @@ class Styles:
                     font-weight: bold;
                     font-size: 14px;
                     min-height: 44px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                 }}
                 QPushButton:hover {{
                     background-color: {'#dc2626' if not self.dark_mode else '#b91c1c'};
@@ -137,7 +137,7 @@ class Styles:
             'label': f"""
                 QLabel {{
                     color: {self.colors['text']};
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                     padding: 5px;
                 }}
             """,
@@ -147,7 +147,7 @@ class Styles:
                     font-size: 28px;
                     font-weight: bold;
                     padding: 12px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                     line-height: 1.3;
                 }}
             """,
@@ -156,7 +156,7 @@ class Styles:
                     color: {self.colors['text']};
                     font-size: 18px;
                     padding: 8px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                     line-height: 1.4;
                 }}
             """,
@@ -165,7 +165,7 @@ class Styles:
                     color: {self.colors['text']};
                     font-size: 15px;
                     padding: 6px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                     line-height: 1.5;
                 }}
             """,
@@ -178,7 +178,7 @@ class Styles:
                     border: 1px solid {self.colors['border']};
                     font-size: 14px;
                     min-height: 48px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                 }}
                 QRadioButton:hover {{
                     background-color: {self.colors['hover']};
@@ -216,7 +216,7 @@ class Styles:
                     border-radius: 12px;
                     border: 1px solid {self.colors['border']};
                     padding: 24px;
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: Helvetica, Arial;
                 }}
             """
         }
@@ -229,7 +229,7 @@ class Styles:
             QWidget {{
                 background-color: {self.colors['background']};
                 color: {self.colors['text']};
-                font-family: Helvetica, Arial, sans-serif;
+                font-family: Helvetica, Arial;
             }}
             QScrollArea {{
                 border: none;
@@ -261,7 +261,7 @@ class Styles:
                 height: 14px;
                 background-color: {self.colors['card']};
                 margin: 4px 0;
-                font-family: Helvetica, Arial, sans-serif;
+                font-family: Helvetica, Arial;
             }}
             QProgressBar::chunk {{
                 background-color: {self.colors['primary']};
@@ -273,6 +273,6 @@ class Styles:
                 padding: 10px;
                 font-size: 14px;
                 font-weight: 500;
-                font-family: Helvetica, Arial, sans-serif;
+                font-family: Helvetica, Arial;
             }}
         """ 

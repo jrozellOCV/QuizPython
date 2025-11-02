@@ -1,0 +1,17 @@
+{
+  "session_date": "2025-11-01T20:20:44.465394",
+  "exam_title": "Practice Exam 3",
+  "total_questions": 50,
+  "quiz_mode": {
+    "score": 0,
+    "total_answered": 0,
+    "wrong_answers": []
+  },
+  "timer_data": {
+    "elapsed_seconds": 879692,
+    "completed": false,
+    "auto_saved": true,
+    "emergency_saved": true,
+    "quit_by_user": false
+  }
+}

@@ -1,0 +1,33 @@
+QUIZ RESULTS SUMMARY
+==================================================
+
+Exam: Practice Exam 1 - Study Wrong Answers
+Completed: 2025-11-01 22:11:31
+Time Taken: 00:11:22
+Questions Answered: 21/21
+Score: 17/21
+Accuracy: 81.0%
+Completion Rate: 100.0%
+
+INCORRECT ANSWERS:
+------------------------------
+1. Question: What does AWS Snowball provide? (Choose TWO)
+   Your Answer: A hybrid cloud storage between on-premises environments and the AWS Cloud.; Secure transfer of large amounts of data into and out of the AWS.
+   Correct Answer: Built-in computing capabilities that allow customers to process data locally.; Secure transfer of large amounts of data into and out of the AWS.
+
+2. Question: Which of the following services allows customers to manage their agreements with AWS?
+   Your Answer: AWS Certificate Manager.
+   Correct Answer: AWS Artifact.
+
+3. Question: Which of the following are examples of AWS-Managed Services, where AWS is responsible for the operational and maintenance burdens of running the service? (Choose TWO)
+   Your Answer: Amazon DynamoDB.; Amazon Elastic Compute Cloud.
+   Correct Answer: Amazon DynamoDB.; Amazon Elastic MapReduce.
+
+4. Question: What does the AWS Health Dashboard provide? (Choose TWO)
+   Your Answer: Recommendations for Cost Optimization.; Personalized view of AWS service health.
+   Correct Answer: Detailed troubleshooting guidance to address AWS events impacting your resources.; Personalized view of AWS service health.
+
+
+==================================================
+FINAL GRADE: 81.0%
+==================================================

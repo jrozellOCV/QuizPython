@@ -1,0 +1,36 @@
+{
+  "session_date": "2025-11-01T22:27:42.417341",
+  "exam_title": "AWS Certified Cloud Practitioner Practice Exam 5",
+  "total_questions": 21,
+  "quiz_mode": {
+    "score": 1,
+    "total_answered": 4,
+    "wrong_answers": [
+      {
+        "question_id": 1,
+        "question": "Which of the following allows you to categorize and track your AWS costs on a detailed level?",
+        "your_answer": "AWS Budgets",
+        "correct_answer": "Cost allocation tags"
+      },
+      {
+        "question_id": 2,
+        "question": "What is the best type of instance purchasing option to choose if you will run an EC2 instance for 3 months to perform a job that is uninterruptible?",
+        "your_answer": "Dedicated Instance",
+        "correct_answer": "On-Demand Instance"
+      },
+      {
+        "question_id": 3,
+        "question": "How can your RDS production instances be more cost-effective when they will be used for a long period of time?",
+        "your_answer": "You can stop your RDS instances when idle to prevent AWS from charging you during this time",
+        "correct_answer": "You can request reserved instances to get discounts on your instance costs"
+      }
+    ]
+  },
+  "timer_data": {
+    "elapsed_seconds": 604,
+    "completed": false,
+    "auto_saved": true,
+    "emergency_saved": true,
+    "quit_by_user": false
+  }
+}

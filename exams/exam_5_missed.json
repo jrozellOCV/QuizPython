@@ -1,0 +1,277 @@
+{
+  "title": "AWS Certified Cloud Practitioner Practice Exam 5",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Which of the following allows you to categorize and track your AWS costs on a detailed level?",
+      "options": {
+        "A": "Cost allocation tags",
+        "B": "Consolidated Billing",
+        "C": "AWS Budgets",
+        "D": "Amazon Aurora Backtrack"
+      },
+      "type": "singleChoice",
+      "answer": "A"
+    },
+    {
+      "id": 2,
+      "question": "What is the best type of instance purchasing option to choose if you will run an EC2 instance for 3 months to perform a job that is uninterruptible?",
+      "options": {
+        "A": "On-Demand Instance",
+        "B": "Reserved Instance",
+        "C": "Spot Instance",
+        "D": "Dedicated Instance"
+      },
+      "type": "singleChoice",
+      "answer": "A"
+    },
+    {
+      "id": 3,
+      "question": "How can your RDS production instances be more cost-effective when they will be used for a long period of time?",
+      "options": {
+        "A": "You can stop your RDS instances when idle to prevent AWS from charging you during this time",
+        "B": "You can easily backup, terminate, and restore RDS instances when you need them",
+        "C": "You can request reserved instances to get discounts on your instance costs",
+        "D": "AWS does not charge you when your RDS is idle"
+      },
+      "type": "singleChoice",
+      "answer": "C"
+    },
+    {
+      "id": 4,
+      "question": "Where can the customer view his Reserved Instance usage for the past month?",
+      "options": {
+        "A": "Amazon S3",
+        "B": "Amazon EC2",
+        "C": "AWS Organizations",
+        "D": "AWS Billing Console"
+      },
+      "type": "singleChoice",
+      "answer": "D"
+    },
+    {
+      "id": 5,
+      "question": "A company is planning to deploy a high-frequency trading (HFT) application that will store constantly changing financial data in AWS and require low-latency access. Which AWS services should be used? (Select TWO.)",
+      "options": {
+        "A": "Amazon EFS",
+        "B": "Amazon S3 Glacier Instant Retrieval",
+        "C": "AWS Snowball Edge",
+        "D": "Amazon S3",
+        "E": "Amazon RDS"
+      },
+      "type": "multiChoice",
+      "answer": [
+        "A",
+        "E"
+      ]
+    },
+    {
+      "id": 6,
+      "question": "Which AWS service allows machine learning models to be trained using SQL commands and enables the integration of trained models within a data warehouse for forecasting purposes?",
+      "options": {
+        "A": "Amazon SageMaker",
+        "B": "Amazon Aurora PostgreSQL",
+        "C": "Amazon Redshift ML",
+        "D": "Amazon MemoryDB for Redis"
+      },
+      "type": "singleChoice",
+      "answer": "C"
+    },
+    {
+      "id": 7,
+      "question": "A company needs to run its workloads in a hybrid cloud. Due to regulatory compliance, some parts of the overall infrastructure need to be on-premises. The company wants to leverage the same API calls for both its AWS cloud and on-premises workloads. Which AWS service or offering is used to meet these requirements?",
+      "options": {
+        "A": "Amazon EC2 Dedicated Hosts",
+        "B": "AWS Outposts",
+        "C": "AWS Local Zones",
+        "D": "AWS Wavelength Zones"
+      },
+      "type": "singleChoice",
+      "answer": "B"
+    },
+    {
+      "id": 8,
+      "question": "A company recently migrated its e-commerce application to AWS in order to handle a surge in customer traffic. The application is hosted on Amazon EC2 instances and uses Amazon RDS to manage the product catalog and inventory. Which of the following options provides disaster recovery solutions for Amazon EC2? (Select TWO).",
+      "options": {
+        "A": "AWS Security Hub",
+        "B": "Amazon EBS Snapshots",
+        "C": "AWS Health Dashboard",
+        "D": "Amazon RDS Snapshots",
+        "E": "Amazon EC2 AMI"
+      },
+      "type": "multiChoice",
+      "answer": [
+        "B",
+        "E"
+      ]
+    },
+    {
+      "id": 9,
+      "question": "Which service in AWS supports various business intelligence tools such as Apache Spark so that you may perform data transformation workloads (ETL) and analytics at a low cost?",
+      "options": {
+        "A": "Amazon OpenSearch",
+        "B": "Amazon Redshift",
+        "C": "Amazon EMR",
+        "D": "Amazon RDS"
+      },
+      "type": "singleChoice",
+      "answer": "C"
+    },
+    {
+      "id": 10,
+      "question": "Which AWS well-architected pillar stresses the importance of selecting the most appropriate and right number of resource types for your requirements?",
+      "options": {
+        "A": "Operational Excellence",
+        "B": "Reliability",
+        "C": "Performance Efficiency",
+        "D": "Cost optimization"
+      },
+      "type": "singleChoice",
+      "answer": "D"
+    },
+    {
+      "id": 11,
+      "question": "A developer needs to access a Linux EC2 Instance to modify a WordPress configuration file. Which of the following methods let them connect to theirinstance’s Linux terminal? (Select TWO.)",
+      "options": {
+        "A": "EC2 Instance Connect",
+        "B": "Session Manager",
+        "C": "AWS Direct Connect",
+        "D": "VPC Peering",
+        "E": "User Data"
+      },
+      "type": "multiChoice",
+      "answer": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "id": 12,
+      "question": "A high-performance computing (HPC) application needs a storage service in AWS that can be used as a centralized Windows File Server for multiple EC2 instances. Which of the following should they use?",
+      "options": {
+        "A": "Amazon S3",
+        "B": "Amazon EFS",
+        "C": "Amazon FSx",
+        "D": "Amazon EBS"
+      },
+      "type": "singleChoice",
+      "answer": "C"
+    },
+    {
+      "id": 13,
+      "question": "Which of the following AWS resources is a zonal service? (Select TWO.)",
+      "options": {
+        "A": "Amazon S3",
+        "B": "Amazon Route 53",
+        "C": "Amazon EC2",
+        "D": "Amazon EBS",
+        "E": "AWS IAM"
+      },
+      "type": "multiChoice",
+      "answer": [
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": 14,
+      "question": "Which of the following AWS services is supported by a dedicated AWS team focused on infrastructure management to assist enterprises with large-scale cloud adoption?",
+      "options": {
+        "A": "AWS Signer",
+        "B": "APN Technology Partner",
+        "C": "AWS Managed Services",
+        "D": "APN Consulting Partner"
+      },
+      "type": "singleChoice",
+      "answer": "C"
+    },
+    {
+      "id": 15,
+      "question": "Which of the following services will be able to reroute traffic to your secondary EC2 instances in another region during disaster recovery?",
+      "options": {
+        "A": "Amazon VPC",
+        "B": "Amazon Route 53",
+        "C": "VPC Peering",
+        "D": "AWS ELB"
+      },
+      "type": "singleChoice",
+      "answer": "B"
+    },
+    {
+      "id": 16,
+      "question": "Which of the following options below is solely the responsibility of the customer in accordance with the AWS shared responsibility model?",
+      "options": {
+        "A": "Configuration Management",
+        "B": "Service and Communications Protection or Zone Security",
+        "C": "Awareness & Training",
+        "D": "Patching of the host operating system"
+      },
+      "type": "singleChoice",
+      "answer": "B"
+    },
+    {
+      "id": 17,
+      "question": "An employee is asking for access to your S3 buckets. What should be the level of access that you should provide to him?",
+      "options": {
+        "A": "Give him administrator access levels",
+        "B": "Give him S3 full access",
+        "C": "Ask what type of access he requires and only provide him those permissions",
+        "D": "Give him read-only access"
+      },
+      "type": "singleChoice",
+      "answer": "C"
+    },
+    {
+      "id": 18,
+      "question": "Which of the following is an AWS service that provides secure key storage and cryptographic operations, such as encryption and decryption, hashing, and digital signing?",
+      "options": {
+        "A": "AWS Secrets Manager",
+        "B": "AWS CloudHSM",
+        "C": "AWS GuardDuty",
+        "D": "AWS Inspector"
+      },
+      "type": "singleChoice",
+      "answer": "B"
+    },
+    {
+      "id": 19,
+      "question": "The security team needs to automate security vulnerability assessments throughout their development and production environments. Which service should they use to comply with this requirement?",
+      "options": {
+        "A": "Amazon Inspector",
+        "B": "AWS Shield",
+        "C": "AWS WAF",
+        "D": "AWS Config"
+      },
+      "type": "singleChoice",
+      "answer": "A"
+    },
+    {
+      "id": 20,
+      "question": "A company plans to encrypt and manage its own encryption keys using a single-tenant hardware security module. The company must also have exclusive control over how its keys are used via an authentication mechanism independent from AWS. Which service would meet that requirement?",
+      "options": {
+        "A": "Amazon Guard​Duty",
+        "B": "Amazon S3",
+        "C": "AWS KMS",
+        "D": "AWS CloudHSM"
+      },
+      "type": "singleChoice",
+      "answer": "D"
+    },
+    {
+      "id": 21,
+      "question": "A startup plans to host an application to an Amazon EC2 instance. The VPC subnets have custom network ACLs to ensure that only authorized traffic is allowed to access the application. Which of the following are features of network ACLs? (Select TWO.)",
+      "options": {
+        "A": "NACLs are stateless.",
+        "B": "NACLs allow inbound rules only.",
+        "C": "NACLs can be associated with multiple instances.",
+        "D": "NACLs allow both inbound and outbound rules.",
+        "E": "NACLs are stateful."
+      },
+      "type": "multiChoice",
+      "answer": [
+        "A",
+        "D"
+      ]
+    }
+  ]
+}

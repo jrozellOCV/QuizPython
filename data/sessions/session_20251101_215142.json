@@ -1,0 +1,24 @@
+{
+  "session_date": "2025-11-01T21:51:42.448047",
+  "exam_title": "Practice Exam 1",
+  "total_questions": 50,
+  "quiz_mode": {
+    "score": 0,
+    "total_answered": 1,
+    "wrong_answers": [
+      {
+        "question_id": 1,
+        "question": "AWS allows users to manage their resources using a web based user interface. What is the name of this interface?",
+        "your_answer": "AWS API.",
+        "correct_answer": "AWS Management Console."
+      }
+    ]
+  },
+  "timer_data": {
+    "elapsed_seconds": 0,
+    "completed": false,
+    "auto_saved": true,
+    "emergency_saved": true,
+    "quit_by_user": false
+  }
+}

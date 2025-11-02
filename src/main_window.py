@@ -1,88 +1,81 @@
 import sys
 import os
 import json
-import signal
-import atexit
-import copy
 from datetime import datetime, timedelta
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                            QHBoxLayout, QLabel, QPushButton, QRadioButton, 
-                            QCheckBox, QButtonGroup, QProgressBar, QScrollArea, 
-                            QMessageBox, QStatusBar, QGraphicsDropShadowEffect, QDialog)
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont, QKeySequence, QAction, QColor
+                            QScrollArea, QMessageBox, QDialog)
+from PyQt6.QtCore import Qt, QTimer, QEventLoop
 
-from src.components.review_dialog import ReviewDialog
+from src.models.quiz_state import QuizState
+from src.viewmodels.quiz_viewmodel import QuizViewModel
+from src.viewmodels.timer_viewmodel import TimerViewModel
+from src.viewmodels.session_viewmodel import SessionViewModel
+from src.viewmodels.results_viewmodel import ResultsViewModel
 from src.components.styles import Styles
+from src.components.widgets import (HeaderWidget, QuestionDisplayWidget,
+                                   OptionButtonsWidget, NavigationFooterWidget,
+                                   StatusBarWidget, QuestionTimelineWidget)
+from src.utils.shortcuts import ShortcutManager
+
 
 class MockExamApp(QMainWindow):
-    def __init__(self, exam_data, shuffle_enabled=False, session_data=None, exam_file_path=None):
+    def __init__(self, exam_data, shuffle_enabled=False, session_data=None, exam_file_path=None, practice_mode=False, show_answer_at_end=False):
         super().__init__()
-        self.exam_data = exam_data
-        self.shuffle_enabled = shuffle_enabled
-        self.session_data = session_data
-        self.exam_file_path = exam_file_path  # Track the exam file path
-        self.session_filepath = None  # Track the session file path for overwriting
-        self.original_session_date = None  # Track the original session date
-        
-        # Initialize from session data if resuming
-        if session_data:
-            # Extract filepath if available (from _filepath added by SessionManager)
-            self.session_filepath = session_data.get('_filepath')
-            # Preserve original session date
-            self.original_session_date = session_data.get('session_date')
-            quiz_mode = session_data.get('quiz_mode', {})
-            self.score = quiz_mode.get('score', 0)
-            self.wrong_answers = quiz_mode.get('wrong_answers', [])
-            self.answered_questions = set(range(quiz_mode.get('total_answered', 0)))
-            self.current_index = quiz_mode.get('total_answered', 0)
-        else:
-            self.score = 0
-            self.wrong_answers = []
-            self.answered_questions = set()
-            self.current_index = 0
-            
-        self.answer_revealed = False
-        self.is_paused = False
-        self.review_mode = False  # Track if we're in review mode
-        self.review_questions = []  # Store full question data for wrong answers
-        # Keep original exam data - make a deep copy to avoid mutations
-        self.original_exam_data = copy.deepcopy(exam_data)
-        
-        # Initialize timer
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_timer)
-        self.start_time = None
-        self.elapsed_time = timedelta(0)
-        
-        # If resuming a session, restore elapsed time
-        if session_data and 'timer_data' in session_data:
-            timer_data = session_data['timer_data']
-            self.elapsed_time = timedelta(seconds=timer_data.get('elapsed_seconds', 0))
-        
-        # Shuffle questions if enabled
-        if self.shuffle_enabled:
-            import random
-            random.shuffle(self.exam_data['questions'])
         
         # Initialize styles
         self.styles = Styles()
         self.colors = self.styles.colors
         
-        # Set up the main window
-        if self.session_data:
+        # Create state model
+        self.quiz_state = QuizState(exam_data, shuffle_enabled, session_data, practice_mode, show_answer_at_end)
+        if exam_file_path:
+            self.quiz_state.exam_file_path = exam_file_path
+        
+        # Create ViewModels
+        self.timer_viewmodel = TimerViewModel(self.quiz_state)
+        self.quiz_viewmodel = QuizViewModel(self.quiz_state)
+        self.session_viewmodel = SessionViewModel(self.quiz_state, self.timer_viewmodel)
+        self.results_viewmodel = ResultsViewModel(self.quiz_state, self.timer_viewmodel)
+        
+        # Set up window
+        self._setup_window()
+        
+        # Create widgets
+        self._create_widgets()
+        
+        # Connect signals
+        self._connect_signals()
+        
+        # Set up shortcuts
+        self.shortcut_manager = ShortcutManager(self)
+        self._setup_shortcuts()
+        
+        # Set up crash protection
+        self.session_viewmodel.setup_crash_protection()
+        self.original_closeEvent = self.closeEvent
+        self.closeEvent = self._custom_close_event
+        
+        # Display first question
+        self.quiz_viewmodel._display_current_question()
+        
+        # Start timer for new sessions or resume for existing sessions (only if not in practice mode)
+        if not self.quiz_state.practice_mode and (not session_data or (session_data and 'timer_data' in session_data)):
+            self.timer_viewmodel.start_timer()
+    
+    def _setup_window(self):
+        """Set up the main window."""
+        if self.quiz_state.practice_mode:
+            title_suffix = " - Practice Mode"
+            if self.quiz_state.shuffle_enabled:
+                title_suffix += " (Shuffled)"
+        elif self.quiz_state.session_data:
             title_suffix = " - Resuming Session"
-            if self.shuffle_enabled:
+            if self.quiz_state.shuffle_enabled:
                 title_suffix += " (Shuffled)"
         else:
-            title_suffix = " - Study Mode (Shuffled)" if self.shuffle_enabled else " - Study Mode"
-        self.setWindowTitle(f"{exam_data['title']}{title_suffix}")
+            title_suffix = " - Study Mode (Shuffled)" if self.quiz_state.shuffle_enabled else " - Study Mode"
+        self.setWindowTitle(f"{self.quiz_state.exam_data['title']}{title_suffix}")
         self.setMinimumSize(800, 600)
-        
-        # Create status bar
-        self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)
-        self.update_status()
         
         # Set application style
         self.setStyleSheet(self.styles.get_application_style())
@@ -91,83 +84,14 @@ class MockExamApp(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setSpacing(0)  # Remove spacing between sections
-        main_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Create header widget (sticky)
-        header_widget = QWidget()
-        header_widget.setStyleSheet(f"""
-            QWidget {{
-                background-color: {self.colors['card']};
-                border-bottom: none;
-            }}
-        """)
-        # Add shadow effect to header
-        header_shadow = QGraphicsDropShadowEffect()
-        header_shadow.setBlurRadius(8)
-        header_shadow.setColor(QColor(30, 41, 59, 8))  # rgba(30,41,59,0.03)
-        header_shadow.setOffset(0, 2)
-        header_widget.setGraphicsEffect(header_shadow)
-        header_layout = QVBoxLayout(header_widget)
-        header_layout.setContentsMargins(32, 28, 32, 20)
-        
-        # Header top row with title and dark mode toggle
-        header_top = QHBoxLayout()
-        
-        # Dark mode toggle button (left side)
-        self.dark_mode_button = QPushButton("🌙")
-        self.dark_mode_button.setFixedSize(40, 40)
-        self.dark_mode_button.setToolTip("Toggle Dark Mode (Ctrl+D)")
-        self.dark_mode_button.clicked.connect(self.toggle_dark_mode)
-        self.dark_mode_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {self.colors['background']};
-                border: 1px solid {self.colors['border']};
-                border-radius: 8px;
-                font-size: 18px;
-            }}
-            QPushButton:hover {{
-                background-color: {self.colors['hover']};
-            }}
-        """)
-        header_top.addWidget(self.dark_mode_button)
-        
-        # Pause button (left side, next to dark mode)
-        self.pause_button = QPushButton("⏸")
-        self.pause_button.setFixedSize(40, 40)
-        self.pause_button.setToolTip("Pause/Resume (Ctrl+P)")
-        self.pause_button.clicked.connect(self.toggle_pause)
-        self.pause_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {self.colors['background']};
-                border: 1px solid {self.colors['border']};
-                border-radius: 8px;
-                font-size: 18px;
-            }}
-            QPushButton:hover {{
-                background-color: {self.colors['hover']};
-            }}
-        """)
-        header_top.addWidget(self.pause_button)
-        
-        # Title (centered)
-        header_top.addStretch()
-        title_label = QLabel(exam_data['title'])
-        title_label.setFont(QFont('Helvetica', 18, QFont.Weight.Bold))
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet(self.styles.styles['label_title'])
-        header_top.addWidget(title_label)
-        header_top.addStretch()
-        
-        # Spacer to balance the buttons on the left
-        spacer = QWidget()
-        spacer.setFixedSize(80, 40)  # Increased to balance two buttons
-        header_top.addWidget(spacer)
-        
-        header_layout.addLayout(header_top)
-        
-        # Add header to main layout
-        main_layout.addWidget(header_widget)
+        # Create header
+        header = HeaderWidget(self.quiz_state.exam_data['title'], self.styles)
+        header.set_practice_mode(self.quiz_state.practice_mode)
+        main_layout.addWidget(header)
+        self.header_widget = header
         
         # Create scroll area for content
         scroll = QScrollArea()
@@ -182,1228 +106,538 @@ class MockExamApp(QMainWindow):
         
         # Create content widget
         content_widget = QWidget()
-        self.content_layout = QVBoxLayout(content_widget)
-        self.content_layout.setContentsMargins(32, 32, 32, 32)
-        self.content_layout.setSpacing(24)
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(32, 32, 32, 32)
+        content_layout.setSpacing(24)
         
-        # Question label
-        self.question_label = QLabel()
-        self.question_label.setFont(QFont('Helvetica', 16))
-        self.question_label.setWordWrap(True)
-        self.question_label.setStyleSheet(f"""
-            QLabel {{
-                color: {self.colors['text']};
-                background-color: {self.colors['card']};
-                padding: 20px;
-                border-radius: 10px;
-                border: 1px solid {self.colors['border']};
-            }}
-        """)
-        self.content_layout.addWidget(self.question_label)
+        # Question display
+        question_display = QuestionDisplayWidget(self.styles)
+        content_layout.addWidget(question_display)
+        self.question_display = question_display
         
-        # Options container
-        self.options_container = QWidget()
-        options_layout = QVBoxLayout(self.options_container)
-        options_layout.setSpacing(12)
+        # Option buttons
+        option_buttons = OptionButtonsWidget(self.styles)
+        content_layout.addWidget(option_buttons)
+        self.option_buttons = option_buttons
         
-        # Create option buttons container
-        self.option_group = QButtonGroup()
-        self.option_buttons = []
-        self.options_layout = options_layout
-        self.current_question_type = "singleChoice"  # Track current question type
-        
-        self.content_layout.addWidget(self.options_container)
-        
-        # Selection indicator
-        self.selection_indicator = QLabel()
-        self.selection_indicator.setStyleSheet(f"""
-            QLabel {{
-                color: {self.colors['text_light']};
-                font-size: 14px;
-            }}
-        """)
-        self.selection_indicator.hide()
-        self.content_layout.addWidget(self.selection_indicator)
-        
-        # Answer label
-        self.answer_label = QLabel()
-        self.answer_label.setFont(QFont('Helvetica', 14))
-        self.answer_label.setWordWrap(True)
-        self.answer_label.hide()
-        self.content_layout.addWidget(self.answer_label)
-        
-        # Add content to scroll area
         scroll.setWidget(content_widget)
         main_layout.addWidget(scroll)
         
-        # Create footer widget (sticky)
-        footer_widget = QWidget()
-        footer_widget.setStyleSheet(f"""
-            QWidget {{
-                background-color: {self.colors['card']};
-                border-top: 1px solid {self.colors['border']};
-            }}
-        """)
-        footer_layout = QVBoxLayout(footer_widget)
-        footer_layout.setContentsMargins(32, 20, 32, 20)
+        # Create footer
+        footer = NavigationFooterWidget(self.styles, len(self.quiz_state.exam_data['questions']), 
+                                        practice_mode=self.quiz_state.practice_mode, 
+                                        quiz_state=self.quiz_state)
+        main_layout.addWidget(footer)
+        self.nav_footer = footer
         
-        # Progress bar
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMaximum(len(exam_data['questions']))
-        self.progress_bar.setValue(0)
-        self.progress_bar.setTextVisible(False)
-        self.progress_bar.setStyleSheet(f"""
-            QProgressBar {{
-                border: 1px solid {self.colors['border']};
-                border-radius: 8px;
-                text-align: center;
-                height: 12px;
-                background-color: {self.colors['card']};
-            }}
-            QProgressBar::chunk {{
-                background-color: {self.colors['primary']};
-                border-radius: 8px;
-            }}
-        """)
-        footer_layout.addWidget(self.progress_bar)
-        
-        # Navigation container
-        nav_container = QWidget()
-        nav_layout = QHBoxLayout(nav_container)
-        nav_layout.setContentsMargins(0, 10, 0, 0)  # Add top margin
-        
-        # Previous button
-        self.prev_button = QPushButton("← Previous")
-        self.prev_button.setStyleSheet(self.styles.styles['button_secondary'])
-        self.prev_button.clicked.connect(self.previous_question)
-        nav_layout.addWidget(self.prev_button)
-        
-        # Question counter
-        self.nav_label = QLabel()
-        self.nav_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        nav_layout.addWidget(self.nav_label)
-        
-        # Combined Confirm/Next button
-        self.action_button = QPushButton("Confirm Answer")
-        self.action_button.setFont(QFont('Helvetica', 12))
-        self.action_button.setStyleSheet(self.styles.styles['button'])
-        self.action_button.clicked.connect(self.handle_action_button)
-        self.action_button.setEnabled(False)  # Initially disabled until an option is selected
-        nav_layout.addWidget(self.action_button)
-        
-        footer_layout.addWidget(nav_container)
-        
-        # Study button (initially hidden, shown in review mode)
-        self.study_button = QPushButton("📚 Study These Questions")
-        self.study_button.setStyleSheet(self.styles.styles['button'])
-        self.study_button.hide()
-        self.study_button.clicked.connect(self.study_wrong_questions)
-        nav_layout.insertWidget(1, self.study_button)
-        
-        # Add footer to main layout
-        main_layout.addWidget(footer_widget)
-        
-        # Set up keyboard shortcuts
-        self.setup_shortcuts()
-        
-        # Display first question
-        self.display_question()
-        
-        # Start timer for new sessions or resume timer for existing sessions
-        if not session_data:
-            self.start_timer()
-        elif session_data and 'timer_data' in session_data:
-            # Resume timer for existing session
-            self.start_timer()
-        
-        # Set up crash detection and auto-save
-        self.setup_crash_protection()
+        # Create status bar
+        status_bar = StatusBarWidget(self.styles, self.quiz_state, self.timer_viewmodel)
+        self.setStatusBar(status_bar)
+        self.status_bar_widget = status_bar
     
-    def create_option_buttons(self, num_options, question_type="singleChoice"):
-        """Create the required number of option buttons"""
-        # Clear existing buttons
-        for button in self.option_buttons:
-            button.deleteLater()
-        self.option_buttons.clear()
-        self.option_group = QButtonGroup()
-        self.current_question_type = question_type
-        
-        # Create new buttons based on question type
-        for i in range(num_options):
-            if question_type == "multiChoice":
-                option = QCheckBox()
-                option.setFont(QFont('Helvetica', 14))
-                option.setStyleSheet(f"""
-                    QCheckBox {{
-                        color: {self.colors['text']};
-                        background-color: {self.colors['card']};
-                        padding: 15px;
-                        border-radius: 8px;
-                        border: 1px solid {self.colors['border']};
-                    }}
-                    QCheckBox:hover {{
-                        background-color: {self.colors['hover']};
-                    }}
-                    QCheckBox::indicator {{
-                        width: 20px;
-                        height: 20px;
-                    }}
-                """)
-            else:
-                option = QRadioButton()
-                option.setFont(QFont('Helvetica', 14))
-                option.setStyleSheet(f"""
-                    QRadioButton {{
-                        color: {self.colors['text']};
-                        background-color: {self.colors['card']};
-                        padding: 15px;
-                        border-radius: 8px;
-                        border: 1px solid {self.colors['border']};
-                    }}
-                    QRadioButton:hover {{
-                        background-color: {self.colors['hover']};
-                    }}
-                    QRadioButton::indicator {{
-                        width: 20px;
-                        height: 20px;
-                    }}
-                """)
-            
-            self.options_layout.addWidget(option)
-            self.option_buttons.append(option)
-            self.option_group.addButton(option, i)
-        
-        # Set up keyboard shortcuts for options
-        self.setup_option_shortcuts(num_options)
+    def _create_widgets(self):
+        """Widgets are created in _setup_window, this is a placeholder."""
+        pass
     
-    def setup_shortcuts(self):
-        # Show answer shortcut (Space)
-        show_answer_shortcut = QAction(self)
-        show_answer_shortcut.setShortcut(QKeySequence(Qt.Key.Key_Space))
-        show_answer_shortcut.triggered.connect(self.show_answer)
-        self.addAction(show_answer_shortcut)
+    def _connect_signals(self):
+        """Connect all ViewModel and widget signals."""
+        # Header signals
+        self.header_widget.dark_mode_toggled.connect(self._toggle_dark_mode)
+        self.header_widget.pause_toggled.connect(self._toggle_pause)
+        self.header_widget.quit_clicked.connect(self._quit_quiz)
         
-        # Next question shortcut (Right arrow)
-        next_shortcut = QAction(self)
-        next_shortcut.setShortcut(QKeySequence(Qt.Key.Key_Right))
-        next_shortcut.triggered.connect(self.next_question)
-        self.addAction(next_shortcut)
+        # Option buttons signals
+        self.option_buttons.option_selected.connect(self._on_option_selected)
+        self.option_buttons.option_clicked.connect(self._on_option_clicked)
         
-        # Previous question shortcut (Left arrow)
-        prev_shortcut = QAction(self)
-        prev_shortcut.setShortcut(QKeySequence(Qt.Key.Key_Left))
-        prev_shortcut.triggered.connect(self.previous_question)
-        self.addAction(prev_shortcut)
+        # Navigation footer signals
+        self.nav_footer.prev_clicked.connect(self.quiz_viewmodel.previous_question)
+        self.nav_footer.next_clicked.connect(self.quiz_viewmodel.next_question)
+        self.nav_footer.action_clicked.connect(self._handle_action_button)
+        self.nav_footer.study_clicked.connect(self.quiz_viewmodel.study_wrong_questions)
+        if hasattr(self.nav_footer, 'question_jumped'):
+            self.nav_footer.question_jumped.connect(self.quiz_viewmodel.jump_to_question)
         
-        # Option shortcuts will be set up dynamically in display_question
+        # Quiz ViewModel signals
+        self.quiz_viewmodel.question_changed.connect(self._on_question_changed)
+        self.quiz_viewmodel.review_question_ready.connect(self._on_review_question_ready)
+        self.quiz_viewmodel.option_selected.connect(self.question_display.set_selection)
+        self.quiz_viewmodel.answer_validated.connect(self._on_answer_validated)
+        self.quiz_viewmodel.navigation_state_changed.connect(self.nav_footer.update_navigation_state)
+        self.quiz_viewmodel.progress_changed.connect(self._on_progress_changed)
+        self.quiz_viewmodel.review_mode_entered.connect(self._on_review_mode_entered)
+        self.quiz_viewmodel.study_mode_entered.connect(self._on_study_mode_entered)
+        self.quiz_viewmodel.quiz_complete.connect(self._on_quiz_complete)
         
-        # Dark mode toggle shortcut (Ctrl+D)
-        dark_mode_shortcut = QAction(self)
-        dark_mode_shortcut.setShortcut(QKeySequence("Ctrl+D"))
-        dark_mode_shortcut.triggered.connect(self.toggle_dark_mode)
-        self.addAction(dark_mode_shortcut)
+        # Quiz State signals for timeline updates
+        self.quiz_state.answered_questions_changed.connect(self._on_answered_questions_changed)
+        self.quiz_state.wrong_answers_changed.connect(self._on_wrong_answers_changed)
         
-        # Pause toggle shortcut (Ctrl+P)
-        pause_shortcut = QAction(self)
-        pause_shortcut.setShortcut(QKeySequence("Ctrl+P"))
-        pause_shortcut.triggered.connect(self.toggle_pause)
-        self.addAction(pause_shortcut)
+        # Timer ViewModel signals
+        self.timer_viewmodel.time_updated.connect(self.status_bar_widget.update_status)
+        
+        # Quiz State signals
+        self.quiz_state.pause_state_changed.connect(self._on_pause_state_changed)
+        self.quiz_state.answer_revealed_changed.connect(self._on_answer_revealed_changed)
+        self.quiz_state.review_mode_changed.connect(self._on_review_mode_changed)
+        
+        # Results ViewModel signals
+        self.results_viewmodel.results_ready.connect(self._on_results_ready)
     
-    def setup_option_shortcuts(self, num_options):
-        """Set up keyboard shortcuts for option selection"""
-        # Remove existing option shortcuts
-        for action in self.actions():
-            if hasattr(action, '_is_option_shortcut'):
-                self.removeAction(action)
-        
-        # Add new shortcuts
-        for i in range(num_options):
-            shortcut = QAction(self)
-            shortcut.setShortcut(QKeySequence(str(i + 1)))
-            shortcut.triggered.connect(lambda checked, idx=i: self.select_option(idx))
-            shortcut._is_option_shortcut = True  # Mark for removal
-            self.addAction(shortcut)
+    def _setup_shortcuts(self):
+        """Set up keyboard shortcuts."""
+        self.shortcut_manager.setup_global_shortcuts(
+            show_answer_callback=self._show_answer,
+            next_question_callback=self._shortcut_next_question,
+            prev_question_callback=self.quiz_viewmodel.previous_question,
+            dark_mode_callback=self._toggle_dark_mode,
+            pause_callback=self._toggle_pause
+        )
     
-    def select_option(self, index):
-        if 0 <= index < len(self.option_buttons):
-            self.option_buttons[index].setChecked(True)
-    
-    def display_question(self):
-        # If in review mode, show review-specific display
-        if self.review_mode:
-            self.display_review_question()
-            return
+    def _on_question_changed(self, question: dict, current: int, total: int):
+        """Handle question changed signal."""
+        # Set question text
+        self.question_display.set_question(question['question'])
         
-        question = self.exam_data['questions'][self.current_index]
-        
-        # Update counter (single source of truth)
-        counter_text = f"Question {self.current_index + 1} of {len(self.exam_data['questions'])}"
-        self.nav_label.setText(counter_text)  # Only update nav label
-        
-        # Update navigation
-        self.prev_button.setEnabled(self.current_index > 0)
-        
-        # Update question
-        self.question_label.setText(question['question'])
-        
-        # Create the right number of option buttons
-        num_options = len(question['options'])
+        # Create options
         question_type = question.get('type', 'singleChoice')
-        self.create_option_buttons(num_options, question_type)
+        self.option_buttons.create_options(question['options'], question_type)
         
-        # Normal mode display
-        if question_type == "singleChoice":
-            self.option_group.setExclusive(True)
+        # Set up option shortcuts
+        self.shortcut_manager.setup_option_shortcuts(
+            len(question['options']),
+            lambda idx: self.option_buttons.option_buttons[idx].setChecked(True)
+        )
+        
+        # Reset UI state
+        self.question_display.hide_answer()
+        self.question_display.set_selection("")
+        # In practice mode, enable action button immediately for navigation
+        if self.quiz_state.practice_mode:
+            self.nav_footer.set_action_button_text("Next →", enabled=True, is_secondary=True)
         else:
-            self.option_group.setExclusive(False)
-            
+            self.nav_footer.set_action_button_text("Confirm Answer", enabled=False, is_secondary=False)
+        self.option_buttons.set_enabled(True)
+        self.option_buttons.clear_selection()
+        
+        # Update status bar
+        self.status_bar_widget.update_status()
+        
+        # Handle pause state
+        if self.quiz_state.is_paused:
+            self.question_display.question_label.hide()
+            self.option_buttons.hide()
+    
+    def _on_review_question_ready(self, question: dict, wrong_info: dict):
+        """Handle review question ready signal."""
+        # Set question text
+        self.question_display.set_question(question['question'])
+        
+        # Create options with highlighting
+        question_type = question.get('type', 'singleChoice')
+        self.option_buttons.create_options(question['options'], question_type)
+        self.option_buttons.set_enabled(False)
+        
+        # Get answer info - check if we have answer_info (from show_answer_at_end) or wrong_answer_info (from review mode)
+        answer_info = question.get('answer_info') or wrong_info
+        your_answer = answer_info.get('your_answer', 'N/A')
+        correct_answer_text = answer_info.get('correct_answer', 'N/A')
+        is_correct = answer_info.get('is_correct', False)
+        
+        # Highlight correct/incorrect options
+        correct_answer = question['answer']
+        styles_map = {}
         for i, (key, value) in enumerate(question['options'].items()):
-            self.option_buttons[i].setText(f"{key}. {value}")
-            self.option_buttons[i].setChecked(False)
-            self.option_buttons[i].setEnabled(True)  # Re-enable buttons for new question
-        
-        # Reset answer display and selection indicator
-        self.answer_label.hide()
-        self.selection_indicator.hide()
-        self.answer_revealed = False
-        self.action_button.setText("Confirm Answer")
-        self.action_button.setStyleSheet(self.styles.styles['button'])
-        self.action_button.setEnabled(False)
-        
-        # Connect option selection handler
-        self.option_group.buttonClicked.connect(self.on_option_selected)
-        
-        # Update progress
-        self.progress_bar.setValue(self.current_index + 1)
-        
-        # Update status
-        self.update_status()
-        
-        # Respect pause state - hide question and answers if paused
-        if self.is_paused:
-            self.question_label.hide()
-            self.options_container.hide()
-
-    def on_option_selected(self, button):
-        # Enable action button when an option is selected
-        self.action_button.setEnabled(True)
-        
-        # Get selected options
-        if self.current_question_type == "multiChoice":
-            selected_options = []
-            for i, option_button in enumerate(self.option_buttons):
-                if option_button.isChecked():
-                    selected_options.append(chr(ord('A') + i))
-            
-            if selected_options:
-                selected_text = ", ".join(selected_options)
-                self.selection_indicator.setText(f"Selected: Options {selected_text}")
-                self.action_button.setText(f"Confirm {selected_text}")
-            else:
-                self.selection_indicator.setText("No options selected")
-                self.action_button.setText("Confirm Answer")
-        else:
-            # Single choice
-            selected_option = chr(ord('A') + self.option_group.id(button))
-            self.selection_indicator.setText(f"Selected: Option {selected_option}")
-            self.action_button.setText(f"Confirm {selected_option}")
-        
-        self.selection_indicator.show()
-        self.action_button.setStyleSheet(self.styles.styles['button'])
-
-    def handle_action_button(self):
-        if self.review_mode:
-            # In review mode, action button just goes to next
-            self.next_question()
-        elif not self.answer_revealed:
-            self.show_answer()
-        else:
-            self.next_question()
-
-    def show_answer(self):
-        if not self.answer_revealed:
-            question = self.exam_data['questions'][self.current_index]
-            correct = question['answer']
-            question_type = question.get('type', 'singleChoice')
-            
-            # Get selected options
             if question_type == "multiChoice":
-                selected_options = []
-                for i, option_button in enumerate(self.option_buttons):
-                    if option_button.isChecked():
-                        selected_options.append(chr(ord('A') + i))
-                selected_option = selected_options
+                is_correct_option = key in (correct_answer if isinstance(correct_answer, list) else [correct_answer])
             else:
-                # Single choice
-                selected_button = self.option_group.checkedButton()
-                selected_option = chr(ord('A') + self.option_group.id(selected_button)) if selected_button else None
+                is_correct_option = key == correct_answer
             
-            # Check if answer is correct
-            if question_type == "multiChoice":
-                # For multi-choice, compare sets
-                correct_set = set(correct) if isinstance(correct, list) else {correct}
-                selected_set = set(selected_option) if selected_option else set()
-                is_correct = correct_set == selected_set
+            if is_correct_option:
+                styles_map[i] = {
+                    'border_color': self.colors['correct'],
+                    'text_color': self.colors['correct'],
+                    'border_width': 2,
+                    'is_bold': True
+                }
             else:
-                # Single choice
-                is_correct = selected_option == correct
-            
-            # Update answer display with selection feedback
-            if is_correct:
-                if question_type == "multiChoice":
-                    selected_text = ", ".join(selected_option) if selected_option else "None"
-                    self.answer_label.setText(f"✓ Correct! Your answers {selected_text} were right.")
-                else:
-                    self.answer_label.setText(f"✓ Correct! Your answer {selected_option} was right.")
-                
-                self.answer_label.setStyleSheet(f"""
-                    QLabel {{
-                        background-color: {self.colors['card']};
-                        padding: 20px;
-                        border-radius: 10px;
-                        border: 1px solid {self.colors['correct']};
-                        color: {self.colors['correct']};
-                    }}
-                """)
-            else:
-                # Incorrect answer
-                if question_type == "multiChoice":
-                    selected_text = ", ".join(selected_option) if selected_option else "None"
-                    correct_text = ", ".join(correct) if isinstance(correct, list) else correct
-                    correct_options_text = "\n".join([f"{opt}. {question['options'][opt]}" for opt in correct])
-                    
-                    self.answer_label.setText(
-                        f"✗ Incorrect. You selected {selected_text}, but the correct answers are {correct_text}.\n\n"
-                        f"Correct Answers:\n{correct_options_text}"
-                    )
-                else:
-                    correct_text = question['options'][correct]
-                    self.answer_label.setText(
-                        f"✗ Incorrect. You selected {selected_option}, but the correct answer is {correct}.\n\n"
-                        f"Correct Answer: {correct}. {correct_text}"
-                    )
-                
-                self.answer_label.setStyleSheet(f"""
-                    QLabel {{
-                        background-color: {self.colors['card']};
-                        padding: 20px;
-                        border-radius: 10px;
-                        border: 1px solid {self.colors['warning']};
-                        color: {self.colors['warning']};
-                    }}
-                """)
-            
-            self.answer_label.show()
-            self.answer_revealed = True
-            self.action_button.setText("Next →")
-            self.action_button.setStyleSheet(self.styles.styles['button_secondary'])
-            self.selection_indicator.hide()
-            
-            # Disable all option buttons to prevent further changes
-            for button in self.option_buttons:
-                button.setEnabled(False)
-            
-            # Record answer
-            if selected_option:
-                if is_correct:
-                    self.score += 1
-                else:
-                    # Store human-readable answers (option text) in wrong_answers
-                    if question_type == "multiChoice":
-                        your_texts = [question['options'][opt] for opt in (selected_option or [])]
-                        correct_list = correct if isinstance(correct, list) else [correct]
-                        correct_texts = [question['options'][opt] for opt in correct_list]
-                        your_answer_value = "; ".join(your_texts) if your_texts else ""
-                        correct_answer_value = "; ".join(correct_texts)
+                # Check if this was the user's answer (for incorrect answers)
+                if not is_correct:
+                    # Handle both string and list formats
+                    if isinstance(your_answer, list):
+                        your_answer_text = ' '.join(str(v).lower() for v in your_answer)
                     else:
-                        your_answer_value = question['options'].get(selected_option, "") if selected_option else ""
-                        correct_answer_value = question['options'].get(correct, "")
-
-                    # Store wrong answer with question ID for easy filtering
-                    wrong_answer = {
-                        'question_id': question.get('id'),
-                        'question': question['question'],
-                        'your_answer': your_answer_value,
-                        'correct_answer': correct_answer_value
-                    }
-                    self.wrong_answers.append(wrong_answer)
-                self.answered_questions.add(self.current_index)
-                self.update_status()
-
-    def next_question(self):
-        if self.review_mode:
-            # In review mode, just move to next question
-            self.current_index += 1
-            if self.current_index >= len(self.review_questions):
-                # Reached end of review, go back to start or close
-                reply = QMessageBox.question(
-                    self, "Review Complete", 
-                    "You've reviewed all incorrect answers.\n\nWould you like to study these questions?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                )
-                if reply == QMessageBox.StandardButton.Yes:
-                    self.study_wrong_questions()
-                else:
-                    self.close()
-                return
-            self.display_question()
-            return
+                        your_answer_text = str(your_answer).lower()
+                    
+                    option_key = key.lower()
+                    option_value = value.lower()
+                    is_user_answer = (option_key in your_answer_text or 
+                                     option_value in your_answer_text or
+                                     f"{key}." in your_answer_text)
+                    
+                    if is_user_answer:
+                        styles_map[i] = {
+                            'border_color': self.colors['warning'],
+                            'text_color': self.colors['warning'],
+                            'border_width': 2,
+                            'is_bold': False
+                        }
         
-        if not self.answer_revealed:
+        if styles_map:
+            self.option_buttons.set_option_styles(styles_map)
+        
+        # Show answer info
+        self.question_display.set_review_answer(your_answer, correct_answer_text)
+        
+        # Update navigation (already handled by progress_changed signal, but ensure button text is correct)
+        total = len(self.quiz_state.review_questions)
+        current = self.quiz_state.current_index + 1
+        self.nav_footer.set_action_button_text(f"Next → (Review {current}/{total})", enabled=True, is_secondary=True)
+        
+        # Update status bar
+        self.status_bar_widget.update_status()
+    
+    def _on_option_selected(self, option_index: int, is_checked: bool):
+        """Handle option selection."""
+        self.quiz_viewmodel.select_option(option_index, is_checked)
+        
+        # For multi-choice questions, enable button when at least one option is selected
+        question = self.quiz_state.get_current_question()
+        question_type = question.get('type', 'singleChoice') if question else 'singleChoice'
+        
+        if question_type == "multiChoice" and not self.quiz_state.practice_mode:
+            # Check if we have any selections after this change
+            if self.quiz_viewmodel.selected_options:
+                self.nav_footer.set_action_button_text("Confirm Answer", enabled=True, is_secondary=False)
+            else:
+                self.nav_footer.set_action_button_text("Confirm Answer", enabled=False, is_secondary=False)
+    
+    def _on_option_clicked(self, option_index: int):
+        """Handle option click (for single choice)."""
+        if self.quiz_state.practice_mode:
+            # In practice mode, show "Show Answer" button
+            self.nav_footer.set_action_button_text("Show Answer", enabled=True, is_secondary=False)
+        else:
+            self.nav_footer.set_action_button_text("Confirm Answer", enabled=True, is_secondary=False)
+    
+    def _show_answer(self):
+        """Show answer and validate."""
+        if not self.quiz_state.answer_revealed:
+            # Sync selection from UI widgets to ensure we have the current state
+            # This fixes the bug where changing answers didn't update the stored selection
+            selected_indices = self.option_buttons.get_selected_indices()
+            question = self.quiz_state.get_current_question()
+            question_type = question.get('type', 'singleChoice') if question else 'singleChoice'
+            
+            if selected_indices:
+                # Convert indices to option keys (A, B, C, D)
+                selected_keys = [chr(ord('A') + idx) for idx in selected_indices]
+                # Update viewmodel to match UI state
+                if question_type == "singleChoice":
+                    # Single choice: replace with the selected option
+                    self.quiz_viewmodel.selected_options = selected_keys[:1]
+                else:
+                    # Multi choice: sync all selected options
+                    self.quiz_viewmodel.selected_options = selected_keys
+            else:
+                # No selection made
+                self.quiz_viewmodel.selected_options = []
+            self.quiz_viewmodel.validate_answer()
+    
+    def _handle_action_button(self):
+        """Handle action button click."""
+        if self.quiz_state.review_mode:
+            # In review mode, just go to next
+            self.quiz_viewmodel.next_question()
+        elif self.quiz_state.practice_mode:
+            # In practice mode, allow free navigation or show answer if selected
+            if self.quiz_viewmodel.selected_options and not self.quiz_state.answer_revealed:
+                self._show_answer()
+            else:
+                self.quiz_viewmodel.next_question()
+        elif not self.quiz_state.answer_revealed:
+            self._show_answer()
+        else:
+            self.quiz_viewmodel.next_question()
+    
+    def _on_answer_validated(self, is_correct: bool, feedback_text: str, style_class: str):
+        """Handle answer validation."""
+        self.question_display.set_answer_feedback(feedback_text, is_correct, style_class)
+        self.question_display.hide_selection()
+        self.option_buttons.set_enabled(False)
+        self.nav_footer.set_action_button_text("Next →", enabled=True, is_secondary=True)
+        
+        # Update status bar with new score
+        self.status_bar_widget.update_status()
+    
+    def _shortcut_next_question(self):
+        """Handle next question shortcut."""
+        if not self.quiz_state.answer_revealed:
             QMessageBox.warning(self, "Warning", "Please show the answer before proceeding.")
             return
-        
-        # Check if any option is selected
-        has_selection = False
-        if self.current_question_type == "multiChoice":
-            has_selection = any(button.isChecked() for button in self.option_buttons)
-        else:
-            has_selection = self.option_group.checkedButton() is not None
-            
-        if not has_selection:
+        if not self.quiz_viewmodel.selected_options:
             QMessageBox.warning(self, "Warning", "Please select an answer before proceeding.")
             return
-        
-        # Move to next question or show results
-        self.current_index += 1
-        if self.current_index >= len(self.exam_data['questions']):
-            self.show_results()
+        self.quiz_viewmodel.next_question()
+    
+    def _toggle_pause(self):
+        """Toggle pause state."""
+        self.quiz_state.is_paused = not self.quiz_state.is_paused
+    
+    def _on_pause_state_changed(self, is_paused: bool):
+        """Handle pause state change."""
+        self.header_widget.update_pause_state(is_paused)
+        if is_paused:
+            self.question_display.question_label.hide()
+            self.option_buttons.hide()
+            self.question_display.answer_label.hide()
+            self.question_display.selection_indicator.hide()
+            self.timer_viewmodel.stop_timer()
         else:
-            self.display_question()
+            self.question_display.question_label.show()
+            self.option_buttons.show()
+            if self.quiz_state.answer_revealed:
+                self.question_display.answer_label.show()
+            if self.quiz_viewmodel.selected_options:
+                self.question_display.selection_indicator.show()
+            self.timer_viewmodel.start_timer()
     
-    def enter_review_mode(self):
-        """Enter review mode for incorrect answers."""
-        if not self.wrong_answers:
-            return
-        
-        # Map wrong answers back to full question data using IDs (much simpler!)
-        self.review_questions = []
-        for wrong_answer in self.wrong_answers:
-            question_id = wrong_answer.get('question_id')
-            if question_id is not None:
-                # Find question by ID in original exam
-                for q in self.original_exam_data['questions']:
-                    if q.get('id') == question_id:
-                        review_q = q.copy()
-                        review_q['wrong_answer_info'] = wrong_answer
-                        self.review_questions.append(review_q)
-                        break
-            else:
-                # Fallback: find by question text if ID not available (for old results)
-                question_text = wrong_answer['question'].strip()
-                for q in self.original_exam_data['questions']:
-                    if q['question'].strip() == question_text:
-                        review_q = q.copy()
-                        review_q['wrong_answer_info'] = wrong_answer
-                        self.review_questions.append(review_q)
-                        break
-        
-        if not self.review_questions:
-            QMessageBox.warning(self, "Error", "Could not map wrong answers to questions.")
-            return
-        
-        # Switch to review mode
-        self.review_mode = True
-        self.current_index = 0
-        self.exam_data = {'title': f"{self.original_exam_data['title']} - Review Mode", 'questions': self.review_questions}
-        
-        # Update UI for review mode
-        self.setWindowTitle(f"{self.original_exam_data['title']} - Review Mode")
-        self.study_button.show()
-        self.action_button.setText("Next →")
-        self.action_button.setStyleSheet(self.styles.styles['button_secondary'])
-        self.action_button.setEnabled(True)
-        
-        # Update progress bar
-        self.progress_bar.setMaximum(len(self.review_questions))
-        
-        # Display first review question
-        self.display_question()
+    def _on_answer_revealed_changed(self, is_revealed: bool):
+        """Handle answer revealed state change."""
+        if not is_revealed:
+            self.question_display.hide_answer()
     
-    def display_review_question(self):
-        """Display a question in review mode with wrong/correct answer info."""
-        if self.current_index >= len(self.review_questions):
-            return
-        
-        review_q = self.review_questions[self.current_index]
-        wrong_info = review_q.get('wrong_answer_info', {})
-        
-        # Update counter
-        counter_text = f"Review {self.current_index + 1} of {len(self.review_questions)}"
-        self.nav_label.setText(counter_text)
-        
-        # Update navigation
-        self.prev_button.setEnabled(self.current_index > 0)
-        
-        # Display question
-        self.question_label.setText(review_q['question'])
-        
-        # Create option buttons (for display only)
-        num_options = len(review_q['options'])
-        question_type = review_q.get('type', 'singleChoice')
-        self.create_option_buttons(num_options, question_type)
-        
-        if question_type == "singleChoice":
-            self.option_group.setExclusive(False)  # Allow multiple selections for highlighting
-        else:
-            self.option_group.setExclusive(False)
-        
-        # Display options and highlight correct/incorrect
-        for i, (key, value) in enumerate(review_q['options'].items()):
-            self.option_buttons[i].setText(f"{key}. {value}")
-            self.option_buttons[i].setChecked(False)
-            self.option_buttons[i].setEnabled(False)  # Disabled in review mode
-            
-            # Highlight correct answer
-            correct_answer = review_q['answer']
-            if question_type == "multiChoice":
-                is_correct = key in (correct_answer if isinstance(correct_answer, list) else [correct_answer])
-            else:
-                is_correct = key == correct_answer
-            
-            if is_correct:
-                self.option_buttons[i].setStyleSheet(f"""
-                    QRadioButton, QCheckBox {{
-                        color: {self.colors['correct']};
-                        background-color: {self.colors['card']};
-                        padding: 15px;
-                        border-radius: 8px;
-                        border: 2px solid {self.colors['correct']};
-                        font-weight: bold;
-                    }}
-                """)
-            else:
-                # Check if this was the user's wrong answer
-                your_answer_text = wrong_info.get('your_answer', '').lower()
-                option_key = key.lower()
-                option_value = value.lower()
-                # Check if this option key or text was in the user's answer
-                is_wrong_answer = (option_key in your_answer_text or 
-                                 option_value in your_answer_text or
-                                 f"{key}." in your_answer_text)
-                
-                if is_wrong_answer:
-                    self.option_buttons[i].setStyleSheet(f"""
-                        QRadioButton, QCheckBox {{
-                            color: {self.colors['warning']};
-                            background-color: {self.colors['card']};
-                            padding: 15px;
-                            border-radius: 8px;
-                            border: 2px solid {self.colors['warning']};
-                        }}
-                    """)
-                else:
-                    self.option_buttons[i].setStyleSheet(f"""
-                        QRadioButton, QCheckBox {{
-                            color: {self.colors['text']};
-                            background-color: {self.colors['card']};
-                            padding: 15px;
-                            border-radius: 8px;
-                            border: 1px solid {self.colors['border']};
-                        }}
-                    """)
-        
-        # Show answer explanation
-        your_answer = wrong_info.get('your_answer', 'N/A')
-        correct_answer = wrong_info.get('correct_answer', 'N/A')
-        
-        answer_text = f"<b>Your Answer:</b> {your_answer}<br><br>"
-        answer_text += f"<b>Correct Answer:</b> {correct_answer}"
-        
-        self.answer_label.setText(answer_text)
-        self.answer_label.setStyleSheet(f"""
-            QLabel {{
-                background-color: {self.colors['card']};
-                padding: 20px;
-                border-radius: 10px;
-                border: 1px solid {self.colors['warning']};
-                color: {self.colors['text']};
-            }}
-        """)
-        self.answer_label.show()
-        
-        # Hide selection indicator in review mode
-        self.selection_indicator.hide()
-        self.answer_revealed = True
-        
-        # Update progress
-        self.progress_bar.setValue(self.current_index + 1)
-        self.update_status()
-        
-        # Respect pause state
-        if self.is_paused:
-            self.question_label.hide()
-            self.options_container.hide()
-    
-    def study_wrong_questions(self):
-        """Filter exam to only include wrong answer questions for study."""
-        if not self.review_questions:
-            QMessageBox.warning(self, "Error", "No questions to study.")
-            return
-        
-        # Create filtered exam data using question IDs (much simpler!)
-        incorrect_ids = {q.get('wrong_answer_info', {}).get('question_id') for q in self.review_questions}
-        incorrect_ids = {id for id in incorrect_ids if id is not None}
-        
-        # Filter questions by ID
-        filtered_questions = []
-        for q in self.original_exam_data['questions']:
-            if q.get('id') in incorrect_ids:
-                filtered_questions.append(q.copy())
-        
-        # If no IDs available, fallback to question text matching
-        if not filtered_questions:
-            for review_q in self.review_questions:
-                question_text = review_q.get('question', '').strip()
-                for orig_q in self.original_exam_data['questions']:
-                    if orig_q.get('question', '').strip() == question_text:
-                        filtered_questions.append(orig_q.copy())
-                        break
-        
-        filtered_exam = {
-            'title': f"{self.original_exam_data['title']} - Study Wrong Answers",
-            'questions': filtered_questions
-        }
-        
-        # Reset state for new quiz
-        self.review_mode = False
-        self.exam_data = filtered_exam
-        self.original_exam_data = filtered_exam
-        self.current_index = 0
-        self.score = 0
-        self.answered_questions = set()
-        self.wrong_answers = []
-        self.answer_revealed = False
-        
-        # Update UI
-        self.setWindowTitle(filtered_exam['title'])
-        self.study_button.hide()
-        self.action_button.setText("Confirm Answer")
-        self.action_button.setStyleSheet(self.styles.styles['button'])
-        self.action_button.setEnabled(False)
-        self.progress_bar.setMaximum(len(filtered_exam['questions']))
-        
-        # Display first question
-        self.display_question()
-        self.update_status()
-    
-    def show_results(self):
-        # Stop timer and save session data (mark as completed)
-        self.stop_timer()
-        self.save_session_data(auto_save=False, emergency=False, completed=True)
-        
-        # Save detailed results to file
-        self.save_results_to_file()
-        
-        # Create results window with more options
-        results = QMessageBox(self)
-        results.setWindowTitle("Exam Results")
-        results.setIcon(QMessageBox.Icon.Information)
-        
-        # Format results message with timer info
-        total_time = self.get_total_elapsed_time()
-        time_str = self.format_time(total_time)
-        percentage = (self.score / len(self.answered_questions) * 100) if len(self.answered_questions) > 0 else 0
-        message = f"Your Score: {self.score}/{len(self.answered_questions)}\n"
-        message += f"Time Taken: {time_str}\n\n"
-        if self.wrong_answers:
-            message += f"You had {len(self.wrong_answers)} incorrect answers.\n"
-            message += "Would you like to review them?\n\n"
-        message += f"Grade: {percentage:.1f}%"
-        
-        results.setText(message)
-        
-        # Add buttons
-        review_button = None
-        if self.wrong_answers:
-            review_button = results.addButton("Review Incorrect Answers", QMessageBox.ButtonRole.ActionRole)
-        results.addButton("Close", QMessageBox.ButtonRole.RejectRole)
-        
-        results.exec()
-        
-        if results.clickedButton() == review_button and self.wrong_answers:
-            self.enter_review_mode()
-        else:
-            self.close()
-
-    def update_status(self):
-        status_parts = []
-        
-        if self.review_mode:
-            status_parts.append(f"Review Mode: {self.current_index + 1}/{len(self.review_questions)}")
-        else:
-            # Add score
-            if self.answered_questions:
-                status_parts.append(f"Score: {self.score}/{len(self.answered_questions)}")
-            else:
-                status_parts.append("Not started")
-            
-            # Add timer
-            total_time = self.get_total_elapsed_time()
-            time_str = self.format_time(total_time)
-            status_parts.append(f"Time: {time_str}")
-        
-        self.statusBar.showMessage(" | ".join(status_parts))
-
-    def previous_question(self):
-        if self.current_index > 0:
-            self.current_index -= 1
-            self.display_question()
-    
-    def start_timer(self):
-        """Start the exam timer"""
-        if not self.start_time:
-            self.start_time = datetime.now()
-            self.timer.start(1000)  # Update every second
-    
-    def stop_timer(self):
-        """Stop the exam timer"""
-        if self.start_time:
-            self.timer.stop()
-            # Add the current session time to elapsed time
-            current_session_time = datetime.now() - self.start_time
-            self.elapsed_time += current_session_time
-            self.start_time = None
-    
-    def update_timer(self):
-        """Update the timer display"""
-        if self.start_time:
-            current_session_time = datetime.now() - self.start_time
-            total_time = self.elapsed_time + current_session_time
-            self.update_status()
-    
-    def get_total_elapsed_time(self):
-        """Get total elapsed time including current session"""
-        if self.start_time:
-            current_session_time = datetime.now() - self.start_time
-            return self.elapsed_time + current_session_time
-        return self.elapsed_time
-    
-    def format_time(self, time_delta):
-        """Format time delta as HH:MM:SS"""
-        total_seconds = int(time_delta.total_seconds())
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
-        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-    
-    def toggle_pause(self):
-        """Toggle pause state - hide/show question and answers, pause/resume timer"""
-        self.is_paused = not self.is_paused
-        
-        if self.is_paused:
-            # Pause: hide question and answers, stop timer
-            self.question_label.hide()
-            self.options_container.hide()
-            self.answer_label.hide()
-            self.selection_indicator.hide()
-            self.pause_button.setText("▶")
-            self.pause_button.setToolTip("Resume (Ctrl+P)")
-            self.stop_timer()
-        else:
-            # Resume: show question and answers, start timer
-            self.question_label.show()
-            self.options_container.show()
-            # Only show answer label if it was previously revealed
-            if self.answer_revealed:
-                self.answer_label.show()
-            # Only show selection indicator if an option was selected
-            if any(button.isChecked() for button in self.option_buttons):
-                self.selection_indicator.show()
-            self.pause_button.setText("⏸")
-            self.pause_button.setToolTip("Pause (Ctrl+P)")
-            self.start_timer()
-    
-    def toggle_dark_mode(self):
-        """Toggle dark mode and refresh all styles"""
+    def _toggle_dark_mode(self):
+        """Toggle dark mode."""
         self.styles.toggle_dark_mode()
         self.colors = self.styles.colors
         
-        # Refresh application style
+        # Update application style
         self.setStyleSheet(self.styles.get_application_style())
         
-        # Update header
-        header_widget = self.centralWidget().layout().itemAt(0).widget()
-        header_widget.setStyleSheet(f"""
-            QWidget {{
-                background-color: {self.colors['card']};
-                border-bottom: none;
-            }}
-        """)
-        
-        # Update dark mode button
-        self.dark_mode_button.setText("☀️" if self.styles.dark_mode else "🌙")
-        self.dark_mode_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {self.colors['background']};
-                border: 1px solid {self.colors['border']};
-                border-radius: 8px;
-                font-size: 18px;
-            }}
-            QPushButton:hover {{
-                background-color: {self.colors['hover']};
-            }}
-        """)
-        
-        # Update pause button
-        self.pause_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {self.colors['background']};
-                border: 1px solid {self.colors['border']};
-                border-radius: 8px;
-                font-size: 18px;
-            }}
-            QPushButton:hover {{
-                background-color: {self.colors['hover']};
-            }}
-        """)
-        
-        # Update question label
-        self.question_label.setStyleSheet(f"""
-            QLabel {{
-                color: {self.colors['text']};
-                background-color: {self.colors['card']};
-                padding: 20px;
-                border-radius: 10px;
-                border: 1px solid {self.colors['border']};
-            }}
-        """)
-        
-        # Update selection indicator
-        self.selection_indicator.setStyleSheet(f"""
-            QLabel {{
-                color: {self.colors['text_light']};
-                font-size: 14px;
-            }}
-        """)
-        
-        # Update footer
-        footer_widget = self.centralWidget().layout().itemAt(2).widget()
-        footer_widget.setStyleSheet(f"""
-            QWidget {{
-                background-color: {self.colors['card']};
-                border-top: 1px solid {self.colors['border']};
-            }}
-        """)
-        
-        # Update progress bar
-        self.progress_bar.setStyleSheet(f"""
-            QProgressBar {{
-                border: 1px solid {self.colors['border']};
-                border-radius: 8px;
-                text-align: center;
-                height: 12px;
-                background-color: {self.colors['card']};
-            }}
-            QProgressBar::chunk {{
-                background-color: {self.colors['primary']};
-                border-radius: 8px;
-            }}
-        """)
-        
-        # Update buttons
-        self.prev_button.setStyleSheet(self.styles.styles['button_secondary'])
-        self.action_button.setStyleSheet(
-            self.styles.styles['button'] if self.action_button.text() == "Confirm Answer" 
-            else self.styles.styles['button_secondary']
-        )
-        
-        # Update option buttons
-        for button in self.option_buttons:
-            if isinstance(button, QRadioButton):
-                button.setStyleSheet(self.styles.styles['radio_button'])
-            else:
-                button.setStyleSheet(f"""
-                    QCheckBox {{
-                        color: {self.colors['text']};
-                        background-color: {self.colors['card']};
-                        padding: 15px;
-                        border-radius: 8px;
-                        border: 1px solid {self.colors['border']};
-                    }}
-                    QCheckBox:hover {{
-                        background-color: {self.colors['hover']};
-                    }}
-                    QCheckBox::indicator {{
-                        width: 20px;
-                        height: 20px;
-                    }}
-                """)
-        
-        # Refresh current answer label if visible
-        if self.answer_label.isVisible():
-            # Re-show answer to update styling
-            current_question = self.exam_data['questions'][self.current_index]
-            correct = current_question['answer']
-            question_type = current_question.get('type', 'singleChoice')
-            
-            # Get selected options to determine if correct
-            if question_type == "multiChoice":
-                selected_options = []
-                for i, option_button in enumerate(self.option_buttons):
-                    if option_button.isChecked():
-                        selected_options.append(chr(ord('A') + i))
-                correct_set = set(correct) if isinstance(correct, list) else {correct}
-                selected_set = set(selected_options) if selected_options else set()
-                is_correct = correct_set == selected_set
-            else:
-                selected_button = self.option_group.checkedButton()
-                selected_option = chr(ord('A') + self.option_group.id(selected_button)) if selected_button else None
-                is_correct = selected_option == correct
-            
-            # Update answer label style
-            if is_correct:
-                self.answer_label.setStyleSheet(f"""
-                    QLabel {{
-                        background-color: {self.colors['card']};
-                        padding: 20px;
-                        border-radius: 10px;
-                        border: 1px solid {self.colors['correct']};
-                        color: {self.colors['correct']};
-                    }}
-                """)
-            else:
-                self.answer_label.setStyleSheet(f"""
-                    QLabel {{
-                        background-color: {self.colors['card']};
-                        padding: 20px;
-                        border-radius: 10px;
-                        border: 1px solid {self.colors['warning']};
-                        color: {self.colors['warning']};
-                    }}
-                """)
+        # Update all widgets
+        self.header_widget.update_colors(self.colors)
+        self.header_widget.update_dark_mode(self.styles.dark_mode)
+        self.question_display.update_colors(self.colors)
+        self.option_buttons.update_colors(self.colors)
+        self.nav_footer.update_colors(self.colors)
+        self.status_bar_widget.update_colors(self.colors)
+        # Update timeline if it exists
+        if hasattr(self.nav_footer, 'timeline_widget') and self.nav_footer.timeline_widget:
+            self.nav_footer.timeline_widget.update_colors(self.colors)
     
+    def _on_progress_changed(self, current: int, total: int):
+        """Handle progress update."""
+        self.nav_footer.update_progress(current, total)
+        # Also update status bar when progress changes
+        self.status_bar_widget.update_status()
     
-    def setup_crash_protection(self):
-        """Set up crash detection and auto-save mechanisms"""
-        # Set up periodic auto-save
-        self.auto_save_timer = QTimer()
-        self.auto_save_timer.timeout.connect(self.auto_save_session)
-        self.auto_save_timer.start(30000)  # Auto-save every 30 seconds
-        
-        # Set up signal handlers for crash detection
-        signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGTERM, self.signal_handler)
-        
-        # Register cleanup function for normal exit
-        atexit.register(self.cleanup_on_exit)
-        
-        # Override closeEvent to save on window close
-        self.closeEvent = self.custom_close_event
+    def _on_answered_questions_changed(self, answered: set):
+        """Handle answered questions change - update timeline."""
+        if self.quiz_state.practice_mode and hasattr(self.nav_footer, 'timeline_widget') and self.nav_footer.timeline_widget:
+            self.nav_footer.update_progress(self.quiz_state.current_index + 1, self.quiz_state.get_total_questions())
     
-    def signal_handler(self, signum, frame):
-        """Handle system signals (SIGINT, SIGTERM)"""
-        print(f"Received signal {signum}, saving session...")
-        self.emergency_save()
-        sys.exit(0)
+    def _on_wrong_answers_changed(self, wrong_answers: list):
+        """Handle wrong answers change - update timeline."""
+        if self.quiz_state.practice_mode and hasattr(self.nav_footer, 'timeline_widget') and self.nav_footer.timeline_widget:
+            self.nav_footer.update_progress(self.quiz_state.current_index + 1, self.quiz_state.get_total_questions())
     
-    def cleanup_on_exit(self):
-        """Cleanup function called on normal exit"""
+    def _on_review_mode_entered(self):
+        """Handle review mode entered."""
+        self.setWindowTitle(f"{self.quiz_state.original_exam_data['title']} - Review Mode")
+        self.nav_footer.show_study_button(True)
+        self.nav_footer.update_total_questions(len(self.quiz_state.review_questions))
+    
+    def _on_review_mode_changed(self, is_review_mode: bool):
+        """Handle review mode state change."""
+        if not is_review_mode:
+            self.nav_footer.show_study_button(False)
+    
+    def _on_study_mode_entered(self, filtered_exam: dict):
+        """Handle study mode entered."""
+        self.setWindowTitle(filtered_exam['title'])
+        self.nav_footer.show_study_button(False)
+        self.nav_footer.update_total_questions(len(filtered_exam['questions']))
+        self.nav_footer.set_action_button_text("Confirm Answer", enabled=False, is_secondary=False)
+    
+    def _on_quiz_complete(self, results: dict):
+        """Handle quiz completion."""
+        # Stop timer and save session
+        self.timer_viewmodel.stop_timer()
+        self.session_viewmodel.save_session_data(auto_save=False, emergency=False, completed=True)
+        
+        # Save results to file
+        self.results_viewmodel.save_results_to_file()
+        
+        # Show results dialog
+        total_time = self.timer_viewmodel.get_total_elapsed_time()
+        time_str = self.timer_viewmodel.format_time(total_time)
+        answered = len(self.quiz_state.answered_questions)
+        percentage = (self.quiz_state.score / answered * 100) if answered > 0 else 0
+        
+        message = f"Your Score: {self.quiz_state.score}/{answered}\n"
+        message += f"Time Taken: {time_str}\n\n"
+        
+        # If show_answer_at_end is enabled, we're already showing all answers
+        if self.quiz_state.show_answer_at_end:
+            message += "All answers are now visible. Navigate through the questions to review them.\n\n"
+        elif self.quiz_state.wrong_answers:
+            message += f"You had {len(self.quiz_state.wrong_answers)} incorrect answers.\n"
+            message += "Would you like to review them?\n\n"
+        
+        message += f"Grade: {percentage:.1f}%"
+        
+        results_msg = QMessageBox(self)
+        results_msg.setWindowTitle("Exam Results")
+        results_msg.setIcon(QMessageBox.Icon.Information)
+        results_msg.setText(message)
+        
+        review_button = None
+        # Only show review button if we're not already in review mode showing all answers
+        if self.quiz_state.wrong_answers and not self.quiz_state.show_answer_at_end:
+            review_button = results_msg.addButton("Review Incorrect Answers", QMessageBox.ButtonRole.ActionRole)
+        results_msg.addButton("Close", QMessageBox.ButtonRole.RejectRole)
+        
+        results_msg.exec()
+        
+        if results_msg.clickedButton() == review_button and self.quiz_state.wrong_answers:
+            self.quiz_viewmodel.enter_review_mode()
+        elif self.quiz_state.show_answer_at_end:
+            # Don't close if we're showing all answers - let user navigate
+            pass
+        else:
+            self.close()
+    
+    def _on_results_ready(self, results_data: dict):
+        """Handle results ready signal."""
+        pass
+    
+    def _quit_quiz(self):
+        """Handle quit quiz button click."""
+        # Save session before quitting with quit flag
         try:
-            self.emergency_save()
-        except:
-            pass  # Ignore errors during cleanup
+            if self.session_viewmodel is not None:
+                # Save with quit_by_user flag
+                self.session_viewmodel.save_session_data(auto_save=False, emergency=True, quit_by_user=True)
+        except Exception:
+            # Fallback: try direct save with quit flag
+            try:
+                from src.utils.session_manager import SessionManager
+                from datetime import datetime
+                
+                if self.quiz_state.original_session_date:
+                    session_date = self.quiz_state.original_session_date
+                else:
+                    session_date = datetime.now().isoformat()
+                
+                total_elapsed = self.timer_viewmodel.get_total_elapsed_time() if hasattr(self, 'timer_viewmodel') and self.timer_viewmodel else timedelta(0)
+                
+                session_data = {
+                    'session_date': session_date,
+                    'exam_title': self.quiz_state.exam_data['title'],
+                    'total_questions': len(self.quiz_state.exam_data['questions']),
+                    'quiz_mode': {
+                        'score': self.quiz_state.score,
+                        'total_answered': len(self.quiz_state.answered_questions),
+                        'wrong_answers': self.quiz_state.wrong_answers
+                    },
+                    'timer_data': {
+                        'elapsed_seconds': int(total_elapsed.total_seconds()),
+                        'completed': False,
+                        'auto_saved': False,
+                        'emergency_saved': True,
+                        'quit_by_user': True
+                    }
+                }
+                
+                session_manager = SessionManager()
+                session_manager.save_session(session_data, self.quiz_state.session_filepath)
+            except Exception:
+                pass
+        
+        # Close and delete the window to return to home page
+        self.close()
+        self.deleteLater()
     
-    def custom_close_event(self, event):
-        """Custom close event handler"""
-        self.emergency_save()
+    def _custom_close_event(self, event):
+        """Custom close event handler."""
+        try:
+            if self.session_viewmodel is not None:
+                self.session_viewmodel.emergency_save()
+        except Exception as e:
+            # SessionViewModel may have been deleted, try direct save
+            try:
+                from src.utils.session_manager import SessionManager
+                from datetime import datetime
+                
+                if self.quiz_state.original_session_date:
+                    session_date = self.quiz_state.original_session_date
+                else:
+                    session_date = datetime.now().isoformat()
+                
+                total_elapsed = self.timer_viewmodel.get_total_elapsed_time() if hasattr(self, 'timer_viewmodel') and self.timer_viewmodel else timedelta(0)
+                
+                session_data = {
+                    'session_date': session_date,
+                    'exam_title': self.quiz_state.exam_data['title'],
+                    'total_questions': len(self.quiz_state.exam_data['questions']),
+                    'quiz_mode': {
+                        'score': self.quiz_state.score,
+                        'total_answered': len(self.quiz_state.answered_questions),
+                        'wrong_answers': self.quiz_state.wrong_answers
+                    },
+                    'timer_data': {
+                        'elapsed_seconds': int(total_elapsed.total_seconds()),
+                        'completed': False,
+                        'auto_saved': True,
+                        'emergency_saved': True
+                    }
+                }
+                
+                session_manager = SessionManager()
+                session_manager.save_session(session_data, self.quiz_state.session_filepath)
+            except Exception as save_error:
+                pass  # Silently fail if save isn't possible
         event.accept()
     
-    def auto_save_session(self):
-        """Auto-save session data periodically"""
-        try:
-            self.save_session_data(auto_save=True)
-        except Exception as e:
-            print(f"Auto-save error: {e}")
-    
-    def emergency_save(self):
-        """Emergency save when app is closing or crashing"""
-        try:
-            # Stop timer first
-            self.stop_timer()
-            
-            # Save session data
-            self.save_session_data(auto_save=True, emergency=True)
-            print("Emergency save completed")
-        except Exception as e:
-            print(f"Emergency save failed: {e}")
-    
-    def save_session_data(self, auto_save=False, emergency=False, completed=False):
-        """Save current session data including timer"""
-        try:
-            from src.utils.session_manager import SessionManager
-            
-            # Prepare session data
-            # Preserve original session date if available, otherwise use current time (first save)
-            if self.original_session_date:
-                session_date = self.original_session_date
-            else:
-                session_date = datetime.now().isoformat()
-                # Store it for future saves
-                self.original_session_date = session_date
-            
-            session_data = {
-                'session_date': session_date,
-                'exam_title': self.exam_data['title'],
-                'total_questions': len(self.exam_data['questions']),
-                'quiz_mode': {
-                    'score': self.score,
-                    'total_answered': len(self.answered_questions),
-                    'wrong_answers': self.wrong_answers
-                },
-                'timer_data': {
-                    'elapsed_seconds': int(self.get_total_elapsed_time().total_seconds()),
-                    'completed': completed,  # True when quiz is finished
-                    'auto_saved': auto_save,
-                    'emergency_saved': emergency
-                }
-            }
-            
-            # Save session (overwrite existing file if resuming, otherwise create new)
-            session_manager = SessionManager()
-            saved_filepath = session_manager.save_session(session_data, self.session_filepath)
-            
-            # Store filepath for future saves (overwrites)
-            self.session_filepath = saved_filepath
-            
-            if auto_save:
-                print("Auto-save completed")
-            
-        except Exception as e:
-            print(f"Error saving session: {e}")
-    
-    def save_results_to_file(self):
-        """Save detailed quiz results to a file."""
-        try:
-            # Create results directory if it doesn't exist (project root is 1 level up from src/)
-            results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'results')
-            os.makedirs(results_dir, exist_ok=True)
-            
-            # Generate filename with timestamp (including microseconds for uniqueness)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            filename = f"quiz_results_{timestamp}.json"
-            filepath = os.path.join(results_dir, filename)
-            
-            # Calculate statistics
-            total_time = self.get_total_elapsed_time()
-            total_questions = len(self.exam_data['questions'])
-            answered_questions = len(self.answered_questions)
-            accuracy = (self.score / answered_questions * 100) if answered_questions > 0 else 0
-            completion_rate = (answered_questions / total_questions * 100) if total_questions > 0 else 0
-            
-            # Get incorrect question IDs
-            incorrect_question_ids = [wa.get('question_id') for wa in self.wrong_answers if wa.get('question_id') is not None]
-            
-            # Get exam file path (relative to project root if absolute)
-            exam_file_path = self.exam_file_path
-            if exam_file_path and os.path.isabs(exam_file_path):
-                # Convert to relative path if possible
-                project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-                try:
-                    exam_file_path = os.path.relpath(exam_file_path, project_root)
-                except:
-                    pass  # Keep absolute path if relpath fails
-            
-            # Prepare comprehensive results data
-            results_data = {
-                "exam_info": {
-                    "title": self.exam_data['title'],
-                    "total_questions": total_questions,
-                    "shuffle_enabled": self.shuffle_enabled,
-                    "exam_file_path": exam_file_path  # Store the exam file path
-                },
-                "session_info": {
-                    "completion_date": datetime.now().isoformat(),
-                    "time_taken": self.format_time(total_time),
-                    "time_taken_seconds": int(total_time.total_seconds())
-                },
-                "performance": {
-                    "score": self.score,
-                    "total_answered": answered_questions,
-                    "accuracy_percentage": round(accuracy, 2),
-                    "completion_percentage": round(completion_rate, 2),
-                    "incorrect_count": len(self.wrong_answers)
-                },
-                "detailed_results": {
-                    "correct_answers": self.score,
-                    "incorrect_answers": self.wrong_answers,
-                    "questions_answered": list(self.answered_questions),
-                    "incorrect_question_ids": incorrect_question_ids  # Store IDs for easy filtering
-                }
-            }
-            
-            # Save to JSON file
-            with open(filepath, 'w') as f:
-                json.dump(results_data, f, indent=2)
-            
-            print(f"Quiz results saved to: {filepath}")
-            
-            # Also create a human-readable text summary (using same timestamp)
-            text_filename = f"quiz_summary_{timestamp}.txt"
-            text_filepath = os.path.join(results_dir, text_filename)
-            
-            with open(text_filepath, 'w') as f:
-                f.write("QUIZ RESULTS SUMMARY\n")
-                f.write("=" * 50 + "\n\n")
-                f.write(f"Exam: {self.exam_data['title']}\n")
-                f.write(f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"Time Taken: {self.format_time(total_time)}\n")
-                f.write(f"Questions Answered: {answered_questions}/{total_questions}\n")
-                f.write(f"Score: {self.score}/{answered_questions}\n")
-                f.write(f"Accuracy: {accuracy:.1f}%\n")
-                f.write(f"Completion Rate: {completion_rate:.1f}%\n\n")
-                
-                if self.wrong_answers:
-                    f.write("INCORRECT ANSWERS:\n")
-                    f.write("-" * 30 + "\n")
-                    for i, wrong in enumerate(self.wrong_answers, 1):
-                        f.write(f"{i}. Question: {wrong['question']}\n")
-                        f.write(f"   Your Answer: {wrong['your_answer']}\n")
-                        f.write(f"   Correct Answer: {wrong['correct_answer']}\n\n")
-                else:
-                    f.write("No incorrect answers!\n")
-                
-                f.write("\n" + "=" * 50 + "\n")
-                f.write(f"FINAL GRADE: {accuracy:.1f}%\n")
-                f.write("=" * 50 + "\n")
-            
-            print(f"Quiz summary saved to: {text_filepath}")
-            
-        except Exception as e:
-            print(f"Error saving results to file: {e}")
 
 def main():
     app = QApplication(sys.argv)
+    # Don't quit when last window closes - we want to show dialog again
+    app.setQuitOnLastWindowClosed(False)
     
-    # Show test selection dialog
-    from src.components.dialogs.test_select_dialog import TestSelectDialog
-    test_dialog = TestSelectDialog()
-    
-    if test_dialog.exec() == QDialog.DialogCode.Accepted:
+    # Loop to allow returning to home page
+    while True:
+        # Show test selection dialog
+        from src.components.dialogs.test_select_dialog import TestSelectDialog
+        test_dialog = TestSelectDialog()
+        
+        if test_dialog.exec() != QDialog.DialogCode.Accepted:
+            app.quit()  # User cancelled, exit app
+            break
         selected_exam = test_dialog.get_selected_exam()
         selected_session = test_dialog.get_selected_session()
         selected_result = test_dialog.get_selected_result()
         shuffle_enabled = test_dialog.is_shuffle_enabled()
+        practice_mode = test_dialog.is_practice_mode_enabled()
+        show_answer_at_end = test_dialog.is_show_answer_at_end_enabled()
         
         if selected_result:
-            # Load exam and enter review mode using saved file path and IDs
+            # Load exam and enter review mode
             incorrect_answers = selected_result.get('detailed_results', {}).get('incorrect_answers', [])
             if not incorrect_answers:
                 QMessageBox.information(None, "No Incorrect Answers", "This test session has no incorrect answers to review.")
                 sys.exit(0)
             
-            # Get exam file path from result
             exam_file_path = selected_result.get('exam_info', {}).get('exam_file_path')
             if not exam_file_path:
                 QMessageBox.warning(None, "Error", "Exam file path not found in result data.")
                 sys.exit(1)
             
-            # Convert relative path to absolute if needed
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            project_root = os.path.dirname(os.path.dirname(__file__))
             if not os.path.isabs(exam_file_path):
                 exam_file_path = os.path.join(project_root, exam_file_path)
             
-            # Load exam data
             from src.utils.data_loader import load_exam_data
             try:
                 exam_data = load_exam_data(exam_file_path)
@@ -1411,31 +645,32 @@ def main():
                 QMessageBox.warning(None, "Error", f"Could not load exam file: {exam_file_path}\n\n{str(e)}")
                 sys.exit(1)
             
-            # Create window and enter review mode
-            window = MockExamApp(exam_data, shuffle_enabled=False, exam_file_path=exam_file_path)
-            window.wrong_answers = incorrect_answers
+            window = MockExamApp(exam_data, shuffle_enabled=False, exam_file_path=exam_file_path, practice_mode=practice_mode, show_answer_at_end=False)
+            window.quiz_state.wrong_answers = incorrect_answers
             window.show()
-            # Enter review mode after showing window
-            QTimer.singleShot(100, window.enter_review_mode)
-            sys.exit(app.exec())
+            QTimer.singleShot(100, window.quiz_viewmodel.enter_review_mode)
+            # Wait for window to close, then continue loop
+            loop = QEventLoop()
+            window.destroyed.connect(loop.quit)
+            if window.isVisible():
+                loop.exec()
         elif selected_exam:
-            # Load the selected exam data
             from src.utils.data_loader import load_exam_data
             exam_file_path = selected_exam['filepath']
             exam_data = load_exam_data(exam_file_path)
             
-            # Start the exam with file path
-            window = MockExamApp(exam_data, shuffle_enabled, exam_file_path=exam_file_path)
+            window = MockExamApp(exam_data, shuffle_enabled, exam_file_path=exam_file_path, practice_mode=practice_mode, show_answer_at_end=show_answer_at_end)
             window.show()
-            sys.exit(app.exec())
+            # Wait for window to close, then continue loop
+            loop = QEventLoop()
+            window.destroyed.connect(loop.quit)
+            if window.isVisible():
+                loop.exec()
         elif selected_session:
-            # Resume a previous session
             from src.utils.data_loader import load_exam_data
-            # Find the exam file for this session
             exam_title = selected_session['exam_title']
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            project_root = os.path.dirname(os.path.dirname(__file__))
             
-            # Try to find matching exam file in exams folder
             exam_file = None
             exams_dir = os.path.join(project_root, 'exams')
             if os.path.exists(exams_dir):
@@ -1452,14 +687,15 @@ def main():
             
             if exam_file:
                 exam_data = load_exam_data(exam_file)
-                # Start the exam with session data and file path
-                window = MockExamApp(exam_data, shuffle_enabled, selected_session, exam_file_path=exam_file)
+                window = MockExamApp(exam_data, shuffle_enabled, selected_session, exam_file_path=exam_file, practice_mode=practice_mode, show_answer_at_end=False)
                 window.show()
-                sys.exit(app.exec())
+                # Wait for window to close, then continue loop
+                loop = QEventLoop()
+                window.destroyed.connect(loop.quit)
+                if window.isVisible():
+                    loop.exec()
             else:
                 QMessageBox.warning(None, "Error", f"Could not find exam file for session: {exam_title}")
-                sys.exit(1)
-        else:
-            sys.exit(0)
-    else:
-        sys.exit(0) 
+                break  # Exit on error
+    
+    sys.exit(0) 
