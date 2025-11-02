@@ -32,9 +32,27 @@
                 }
               }
             },
-            "answer": {
+            "type": {
               "type": "string",
-              "pattern": "^[A-E]$"
+              "enum": ["singleChoice", "multiChoice"],
+              "default": "singleChoice"
+            },
+            "answer": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-E]$"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-E]$"
+                  },
+                  "minItems": 1,
+                  "maxItems": 5
+                }
+              ]
             }
           }
         }

@@ -1,0 +1,81 @@
+QUIZ RESULTS SUMMARY
+==================================================
+
+Exam: Practice Exam 4
+Completed: 2025-11-01 18:41:32
+Time Taken: 02:37:25
+Questions Answered: 50/50
+Score: 33/50
+Accuracy: 66.0%
+Completion Rate: 100.0%
+
+INCORRECT ANSWERS:
+------------------------------
+1. Question: Which of the following activities supports the Operational Excellence pillar of the AWS Well-Architected Framework?
+   Your Answer: Deploying an application in multiple Availability Zones.
+   Correct Answer: Using AWS CloudFormation to manage infrastructure as code.
+
+2. Question: Both AWS and traditional IT distributors provide a wide range of virtual servers to meet their customers’ requirements. What is the name of these virtual servers in AWS?
+   Your Answer: Amazon VPC.
+   Correct Answer: Amazon EC2 Instances.
+
+3. Question: TYMO Cloud Corp is looking forward to migrating their entire on-premises data center to AWS. What tool can they use to perform a cost-benefit analysis of moving to the AWS Cloud?
+   Your Answer: AWS Pricing Calculator.
+   Correct Answer: AWS TCO Calculator.
+
+4. Question: A company is planning to migrate a database with high read/write activity to AWS. What is the best storage option to use?
+   Your Answer: Amazon S3.
+   Correct Answer: Amazon EBS.
+
+5. Question: What does AWS Service Catalog provide?
+   Your Answer: It enables customers to quickly find descriptions and use cases for AWS services.
+   Correct Answer: It simplifies organizing and governing commonly deployed IT services.
+
+6. Question: Which of the following allows you to create new RDS instances? (Choose TWO)
+   Your Answer: AWS CodeDeploy.; AWS CloudFormation.
+   Correct Answer: AWS CloudFormation.; AWS Management Console.
+
+7. Question: Which of the following AWS Services helps with planning application migration to the AWS Cloud?
+   Your Answer: AWS Migration Hub.
+   Correct Answer: AWS Application Discovery Service.
+
+8. Question: What are the benefits of implementing a tagging strategy for AWS resources? (Choose TWO)
+   Your Answer: Quickly identify resources that belong to a specific project.; Track API calls in your AWS account.
+   Correct Answer: Quickly identify resources that belong to a specific project.; Track AWS spending across multiple resources.
+
+9. Question: A company is planning to migrate an application from Amazon EC2 to AWS Lambda to use a serverless architecture. Which of the following will be the responsibility of AWS after migration? (Choose TWO)
+   Your Answer: Operating system maintenance.; Data management.
+   Correct Answer: Capacity management.; Operating system maintenance.
+
+10. Question: Which design principles relate to performance efficiency in AWS? (Choose TWO)
+   Your Answer: Build multi-region architectures to better serve global customers.; Apply security at all layers.
+   Correct Answer: Build multi-region architectures to better serve global customers.; Use serverless architectures.
+
+11. Question: A customer is planning to move billions of images and videos to be stored on Amazon S3. The customer has approximately 60 Petabytes of data to move. Which of the following AWS Services is the best choice to transfer the data to AWS?
+   Your Answer: S3 Transfer Acceleration.
+   Correct Answer: Snowmobile.
+
+12. Question: A developer needs to set up an SSL security certificate for a client's eCommerce website in order to use the HTTPS protocol. Which of the following AWS services can be used to deploy the required SSL server certificates? (Choose TWO)
+   Your Answer: Amazon Route 53.; AWS Data Pipeline.
+   Correct Answer: Amazon Route 53.; AWS ACM.
+
+13. Question: What are the benefits of using DynamoDB? (Choose TWO)
+   Your Answer: Automatically scales to meet required throughput capacity.; Supports the most popular NoSQL database engines such as CouchDB and MongoDB.
+   Correct Answer: Automatically scales to meet required throughput capacity.; Offers extremely low (single-digit millisecond) latency.
+
+14. Question: Which of the following AWS services scale automatically without your intervention? (Choose TWO)
+   Your Answer: Amazon EC2.; Amazon S3.
+   Correct Answer: Amazon S3.; AWS Lambda.
+
+15. Question: A company needs to migrate their website from on-premises to AWS. Security is a major concern for them, so they need to host their website on hardware that is NOT shared with other AWS customers. Which of the following EC2 instance options meets this requirement?
+   Your Answer: Reserved instances.
+   Correct Answer: Dedicated instances.
+
+16. Question: A company is trying to analyze the costs applied to their AWS account recently. Which of the following provides them the most granular data about their AWS costs and usage?
+   Your Answer: AWS Cost Explorer.
+   Correct Answer: AWS Cost & Usage Report.
+
+17. Question: When running a workload in AWS, the customer is NOT responsible for: (Select TWO)
+   Your Answer: Running penetration tests.; Reserving capacity.
+   Correct Answer: Data center operations.; Infrastructure security.
+

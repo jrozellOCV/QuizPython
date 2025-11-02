@@ -1,0 +1,97 @@
+QUIZ RESULTS SUMMARY
+==================================================
+
+Exam: Practice Exam 1
+Completed: 2025-10-31 11:15:09
+Time Taken: 00:55:38
+Questions Answered: 50/50
+Score: 29/50
+Accuracy: 58.0%
+Completion Rate: 100.0%
+
+INCORRECT ANSWERS:
+------------------------------
+1. Question: You have noticed that several critical Amazon EC2 instances have been terminated. Which of the following AWS services would help you determine who took this action?
+   Your Answer: D
+   Correct Answer: B
+
+2. Question: Which statement is true regarding the AWS Shared Responsibility Model?
+   Your Answer: B
+   Correct Answer: A
+
+3. Question: You have set up consolidated billing for several AWS accounts. One of the accounts has purchased a number of reserved instances for 3 years. Which of the following is true regarding this scenario?
+   Your Answer: D
+   Correct Answer: B
+
+4. Question: What does AWS Snowball provide? (Choose TWO)
+   Your Answer: ['A', 'C']
+   Correct Answer: ['A', 'E']
+
+5. Question: Which of the following helps a customer view the Amazon EC2 billing activity for the past month?
+   Your Answer: A
+   Correct Answer: D
+
+6. Question: What do you gain from setting up consolidated billing for five different AWS accounts under another master account?
+   Your Answer: B
+   Correct Answer: C
+
+7. Question: What should you do in order to keep the data on EBS volumes safe? (Choose TWO)
+   Your Answer: ['A', 'C']
+   Correct Answer: ['B', 'C']
+
+8. Question: One of the most important AWS best-practices to follow is the cloud architecture principle of elasticity. How does this principle improve your architecture’s design?
+   Your Answer: B
+   Correct Answer: D
+
+9. Question: A startup company is operating on limited funds and is extremely concerned about cost overruns. Which of the below options can be used to notify the company when their monthly AWS bill exceeds $2000? (Choose TWO)
+   Your Answer: ['C']
+   Correct Answer: ['A', 'C']
+
+10. Question: What does Amazon CloudFront use to distribute content to global users with low latency?
+   Your Answer: B
+   Correct Answer: C
+
+11. Question: You are working on a project that involves creating thumbnails of millions of images. Consistent uptime is not an issue, and continuous processing is not required. Which EC2 buying option would be the most cost-effective?
+   Your Answer: C
+   Correct Answer: D
+
+12. Question: Which of the following services allows customers to manage their agreements with AWS?
+   Your Answer: B
+   Correct Answer: A
+
+13. Question: Which of the following are examples of AWS-Managed Services, where AWS is responsible for the operational and maintenance burdens of running the service? (Choose TWO)
+   Your Answer: ['A', 'D']
+   Correct Answer: ['B', 'C']
+
+14. Question: Your company has a data store application that requires access to a NoSQL database. Which AWS database offering would meet this requirement?
+   Your Answer: A
+   Correct Answer: B
+
+15. Question: You have AWS Basic support, and you have discovered that some AWS resources are being used maliciously, and those resources could potentially compromise your data. What should you do?
+   Your Answer: D
+   Correct Answer: B
+
+16. Question: A company is planning to host an educational website on AWS. Their video courses will be streamed all around the world. Which of the following AWS services will help achieve high transfer speeds?
+   Your Answer: B
+   Correct Answer: D
+
+17. Question: What is the AWS service that enables AWS architects to manage infrastructure as code?
+   Your Answer: B
+   Correct Answer: A
+
+18. Question: Under the shared responsibility model, which of the following is the responsibility of AWS?
+   Your Answer: C
+   Correct Answer: B
+
+19. Question: What does the AWS Health Dashboard provide? (Choose TWO)
+   Your Answer: ['C', 'E']
+   Correct Answer: ['A', 'E']
+
+20. Question: Which of the following is not a benefit of Amazon S3? (Choose TWO)
+   Your Answer: ['A', 'D']
+   Correct Answer: ['B', 'D']
+
+21. Question: An organization has decided to purchase an Amazon EC2 Reserved Instance (RI) for three years in order to reduce costs. It is possible that the application workloads could change during the reservation period. What is the EC2 Reserved Instance (RI) type that will allow the company to exchange the purchased reserved instance for another reserved instance with higher computing power if they need to?
+   Your Answer: A
+   Correct Answer: D
+

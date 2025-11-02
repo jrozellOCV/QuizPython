@@ -1,23 +1,54 @@
 class Styles:
     def __init__(self):
-        # Define color scheme
-        self.colors = {
-            'primary': '#2563eb',      # Bright blue
-            'primary_dark': '#1d4ed8', # Darker blue for hover
-            'success': '#059669',      # Green
-            'success_dark': '#047857', # Darker green for hover
-            'background': '#f8fafc',   # Light gray background
-            'card': '#ffffff',         # White for cards
-            'text': '#1e293b',         # Dark gray for text
-            'text_light': '#64748b',   # Light gray for secondary text
-            'border': '#e2e8f0',       # Light gray for borders
-            'hover': '#f1f5f9',        # Light gray for hover states
-            'correct': '#059669',      # Green for correct answers
-            'disabled': '#94a3b8',     # Gray for disabled elements
-            'warning': '#dc2626',      # Red for warnings
-            'flashcard': '#f0f9ff',    # Light blue for flashcard mode
-            'shadow': 'rgba(0, 0, 0, 0.1)'  # Subtle shadow
-        }
+        self.dark_mode = False
+        self._init_colors()
+        self._init_styles()
+    
+    def _init_colors(self):
+        """Initialize color scheme based on dark mode state"""
+        if self.dark_mode:
+            self.colors = {
+                'primary': '#3b82f6',      # Bright blue
+                'primary_dark': '#2563eb', # Darker blue for hover
+                'success': '#10b981',      # Green
+                'success_dark': '#059669', # Darker green for hover
+                'background': '#1e293b',   # Dark background
+                'card': '#334155',         # Dark card
+                'text': '#f1f5f9',         # Light text
+                'text_light': '#cbd5e1',   # Lighter gray for secondary text
+                'border': '#475569',       # Dark border
+                'hover': '#475569',        # Dark hover
+                'correct': '#10b981',      # Green for correct answers
+                'disabled': '#64748b',     # Gray for disabled elements
+                'warning': '#ef4444',      # Red for warnings
+                'shadow': 'rgba(0, 0, 0, 0.3)'  # Darker shadow
+            }
+        else:
+            self.colors = {
+                'primary': '#2563eb',      # Bright blue
+                'primary_dark': '#1d4ed8', # Darker blue for hover
+                'success': '#059669',      # Green
+                'success_dark': '#047857', # Darker green for hover
+                'background': '#f8fafc',   # Light gray background
+                'card': '#ffffff',       # White for cards
+                'text': '#1e293b',         # Dark gray for text
+                'text_light': '#64748b',   # Light gray for secondary text
+                'border': '#e2e8f0',       # Light gray for borders
+                'hover': '#f1f5f9',        # Light gray for hover states
+                'correct': '#059669',      # Green for correct answers
+                'disabled': '#94a3b8',     # Gray for disabled elements
+                'warning': '#dc2626',      # Red for warnings
+                'shadow': 'rgba(0, 0, 0, 0.1)'  # Subtle shadow
+            }
+    
+    def toggle_dark_mode(self):
+        """Toggle dark mode and regenerate styles"""
+        self.dark_mode = not self.dark_mode
+        self._init_colors()
+        self._init_styles()
+    
+    def _init_styles(self):
+        """Initialize styles based on current colors"""
         
         # Define standard styles
         self.styles = {
@@ -100,7 +131,7 @@ class Styles:
                     font-family: Helvetica, Arial, sans-serif;
                 }}
                 QPushButton:hover {{
-                    background-color: #b91c1c;
+                    background-color: {'#dc2626' if not self.dark_mode else '#b91c1c'};
                 }}
             """,
             'label': f"""

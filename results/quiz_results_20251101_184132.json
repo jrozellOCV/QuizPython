@@ -1,0 +1,198 @@
+{
+  "exam_info": {
+    "title": "Practice Exam 4",
+    "total_questions": 50,
+    "shuffle_enabled": true,
+    "exam_file_path": "exams/exam_4.json"
+  },
+  "session_info": {
+    "completion_date": "2025-11-01T18:41:32.863620",
+    "time_taken": "02:37:25",
+    "time_taken_seconds": 9445
+  },
+  "performance": {
+    "score": 33,
+    "total_answered": 50,
+    "accuracy_percentage": 66.0,
+    "completion_percentage": 100.0,
+    "incorrect_count": 17
+  },
+  "detailed_results": {
+    "correct_answers": 33,
+    "incorrect_answers": [
+      {
+        "question": "Which of the following activities supports the Operational Excellence pillar of the AWS Well-Architected Framework?",
+        "your_answer": "Deploying an application in multiple Availability Zones.",
+        "correct_answer": "Using AWS CloudFormation to manage infrastructure as code.",
+        "question_id": 37
+      },
+      {
+        "question": "Both AWS and traditional IT distributors provide a wide range of virtual servers to meet their customers\u2019 requirements. What is the name of these virtual servers in AWS?",
+        "your_answer": "Amazon VPC.",
+        "correct_answer": "Amazon EC2 Instances.",
+        "question_id": 34
+      },
+      {
+        "question": "TYMO Cloud Corp is looking forward to migrating their entire on-premises data center to AWS. What tool can they use to perform a cost-benefit analysis of moving to the AWS Cloud?",
+        "your_answer": "AWS Pricing Calculator.",
+        "correct_answer": "AWS TCO Calculator.",
+        "question_id": 36
+      },
+      {
+        "question": "A company is planning to migrate a database with high read/write activity to AWS. What is the best storage option to use?",
+        "your_answer": "Amazon S3.",
+        "correct_answer": "Amazon EBS.",
+        "question_id": 16
+      },
+      {
+        "question": "What does AWS Service Catalog provide?",
+        "your_answer": "It enables customers to quickly find descriptions and use cases for AWS services.",
+        "correct_answer": "It simplifies organizing and governing commonly deployed IT services.",
+        "question_id": 19
+      },
+      {
+        "question": "Which of the following allows you to create new RDS instances? (Choose TWO)",
+        "your_answer": "AWS CodeDeploy.; AWS CloudFormation.",
+        "correct_answer": "AWS CloudFormation.; AWS Management Console.",
+        "question_id": 46
+      },
+      {
+        "question": "Which of the following AWS Services helps with planning application migration to the AWS Cloud?",
+        "your_answer": "AWS Migration Hub.",
+        "correct_answer": "AWS Application Discovery Service.",
+        "question_id": 21
+      },
+      {
+        "question": "What are the benefits of implementing a tagging strategy for AWS resources? (Choose TWO)",
+        "your_answer": "Quickly identify resources that belong to a specific project.; Track API calls in your AWS account.",
+        "correct_answer": "Quickly identify resources that belong to a specific project.; Track AWS spending across multiple resources.",
+        "question_id": 26
+      },
+      {
+        "question": "A company is planning to migrate an application from Amazon EC2 to AWS Lambda to use a serverless architecture. Which of the following will be the responsibility of AWS after migration? (Choose TWO)",
+        "your_answer": "Operating system maintenance.; Data management.",
+        "correct_answer": "Capacity management.; Operating system maintenance.",
+        "question_id": 3
+      },
+      {
+        "question": "Which design principles relate to performance efficiency in AWS? (Choose TWO)",
+        "your_answer": "Build multi-region architectures to better serve global customers.; Apply security at all layers.",
+        "correct_answer": "Build multi-region architectures to better serve global customers.; Use serverless architectures.",
+        "question_id": 28
+      },
+      {
+        "question": "A customer is planning to move billions of images and videos to be stored on Amazon S3. The customer has approximately 60 Petabytes of data to move. Which of the following AWS Services is the best choice to transfer the data to AWS?",
+        "your_answer": "S3 Transfer Acceleration.",
+        "correct_answer": "Snowmobile.",
+        "question_id": 6
+      },
+      {
+        "question": "A developer needs to set up an SSL security certificate for a client's eCommerce website in order to use the HTTPS protocol. Which of the following AWS services can be used to deploy the required SSL server certificates? (Choose TWO)",
+        "your_answer": "Amazon Route 53.; AWS Data Pipeline.",
+        "correct_answer": "Amazon Route 53.; AWS ACM.",
+        "question_id": 1
+      },
+      {
+        "question": "What are the benefits of using DynamoDB? (Choose TWO)",
+        "your_answer": "Automatically scales to meet required throughput capacity.; Supports the most popular NoSQL database engines such as CouchDB and MongoDB.",
+        "correct_answer": "Automatically scales to meet required throughput capacity.; Offers extremely low (single-digit millisecond) latency.",
+        "question_id": 39
+      },
+      {
+        "question": "Which of the following AWS services scale automatically without your intervention? (Choose TWO)",
+        "your_answer": "Amazon EC2.; Amazon S3.",
+        "correct_answer": "Amazon S3.; AWS Lambda.",
+        "question_id": 2
+      },
+      {
+        "question": "A company needs to migrate their website from on-premises to AWS. Security is a major concern for them, so they need to host their website on hardware that is NOT shared with other AWS customers. Which of the following EC2 instance options meets this requirement?",
+        "your_answer": "Reserved instances.",
+        "correct_answer": "Dedicated instances.",
+        "question_id": 5
+      },
+      {
+        "question": "A company is trying to analyze the costs applied to their AWS account recently. Which of the following provides them the most granular data about their AWS costs and usage?",
+        "your_answer": "AWS Cost Explorer.",
+        "correct_answer": "AWS Cost & Usage Report.",
+        "question_id": 22
+      },
+      {
+        "question": "When running a workload in AWS, the customer is NOT responsible for: (Select TWO)",
+        "your_answer": "Running penetration tests.; Reserving capacity.",
+        "correct_answer": "Data center operations.; Infrastructure security.",
+        "question_id": 44
+      }
+    ],
+    "questions_answered": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49
+    ],
+    "incorrect_question_ids": [
+      37,
+      34,
+      36,
+      16,
+      19,
+      46,
+      21,
+      26,
+      3,
+      28,
+      6,
+      1,
+      39,
+      2,
+      5,
+      22,
+      44
+    ]
+  }
+}

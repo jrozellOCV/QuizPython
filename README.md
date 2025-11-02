@@ -1,6 +1,6 @@
 # Quiz Python Application
 
-A modern, interactive quiz application built with Python and PyQt6, designed to help users study and prepare for exams through both quiz and flashcard modes.
+A modern, interactive quiz application built with Python and PyQt6, designed to help users study and prepare for exams with session management, progress tracking, and comprehensive review capabilities.
 
 ## System Requirements
 
@@ -14,24 +14,23 @@ A modern, interactive quiz application built with Python and PyQt6, designed to 
 - Interactive multiple-choice questions with immediate feedback
 - Progress tracking with a visual progress bar
 - Score tracking and performance statistics
-- Review of incorrect answers
+- Session save/resume functionality - pause and resume study sessions at any time
+- **Pause functionality** - Temporarily hide questions and answers while pausing the timer
+- Timer functionality to track study time
+- Shuffle questions option for varied practice
+- Review of incorrect answers from completed sessions
+- Test selection dialog with tabs for easy navigation
+- Results saving system with detailed performance metrics
 - Keyboard shortcuts for navigation and answering
 - Modern, clean user interface with smooth animations
 
-### Flashcard Mode
-- Flip cards to reveal answers
-- Mark cards as known or needing more review
-- Track progress of learned cards
-- Smooth card flip animations
-- Easy navigation between cards
-
 ### User Interface
 - Modern, responsive design
-- Dark/light mode support
-- Intuitive navigation
+- **Dark mode toggle** - Switch between light and dark themes for comfortable studying
+- Intuitive navigation with tabbed test selection
 - Clear visual feedback for correct/incorrect answers
 - Progress indicators
-- Status bar with current mode and progress
+- Status bar with current progress and session info
 
 ## Question Format
 
@@ -97,6 +96,7 @@ You can use AI to generate new exam questions following these steps:
    - Validate the JSON format
 
 4. **Adding to the Application**
+   - Place exam JSON files in the `exams/` folder
    - Add new questions to your exam JSON file
    - Maintain unique IDs for each question
    - Keep the JSON structure consistent
@@ -175,8 +175,46 @@ Expected AI response:
 
 3. Run the application:
    ```bash
-   python src/main.py
+   python main.py
    ```
+
+   Note: The application will automatically:
+   - Load exam files from the `exams/` folder
+   - Save study sessions to `data/sessions/` for resuming later
+   - Save completed quiz results to `results/` folder
+
+## Keyboard Shortcuts
+
+The application supports the following keyboard shortcuts for quick navigation:
+
+- **Space**: Show answer for current question
+- **Right Arrow** (→): Move to next question
+- **Left Arrow** (←): Move to previous question
+- **1-9**: Select option by number (1 for first option, 2 for second, etc.)
+- **Ctrl+P**: Toggle pause mode (hides questions/answers and pauses timer)
+- **Ctrl+D**: Toggle dark mode
+
+## Features in Detail
+
+### Pause Mode
+
+The pause feature allows you to temporarily hide questions and answers while keeping your session active. When paused:
+- The question and all answer options are hidden
+- The timer is paused
+- Your session data remains saved
+- Click the pause button (⏸) again or press **Ctrl+P** to resume
+
+This is useful for:
+- Taking a break without losing your place
+- Temporarily hiding content from view
+- Pausing time tracking during interruptions
+
+### Dark Mode
+
+Toggle between light and dark themes for comfortable studying in any lighting condition:
+- Click the dark mode button (🌙/☀️) in the header
+- Or use the keyboard shortcut **Ctrl+D**
+- Your preference persists throughout the session
 
 ### Troubleshooting
 
@@ -190,8 +228,8 @@ If you encounter any issues:
 2. **Application Won't Start**
    - Verify Python version: `python --version`
    - Check PyQt6 installation: `python -c "import PyQt6; print(PyQt6.__version__)"`
-   - Ensure you're in the correct directory
-   - Check the exam data file exists: `aws_mock_exam.json`
+   - Ensure you're in the correct directory (project root)
+   - Verify exam files exist in the `exams/` folder
 
 3. **Display Issues**
    - Update your graphics drivers
@@ -201,6 +239,20 @@ If you encounter any issues:
      # or
      export QT_QPA_PLATFORM=windows  # For Windows
      ```
+
+## Future Improvements
+
+Here are some small but impactful improvements that could enhance the application:
+
+- **Keyboard Shortcut Help Menu**: A help dialog displaying all available keyboard shortcuts
+- **Session Statistics Visualization**: Charts and graphs showing performance trends over time
+- **Question Difficulty Tagging**: Tag questions by difficulty level to enable filtered practice
+- **Cross-Session Progress Tracking**: Track improvement across multiple study sessions
+- **Export Results**: Export quiz results to CSV or PDF format for external analysis
+- **Question Search/Filter**: Search and filter questions by topic or keywords
+- **Practice Mode**: A mode without timer restrictions and immediate answer feedback
+- **Question Bookmarks**: Bookmark difficult questions for focused review
+- **Performance Analytics Dashboard**: Visual dashboard showing overall study statistics and weak areas
 
 ## Contributing
 

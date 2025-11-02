@@ -1,0 +1,126 @@
+Question 1:
+Q: You have set up consolidated billing for several AWS accounts. One of the accounts has purchased a number of reserved instances for 3 years. Which of the following is true regarding this scenario?
+Your Answer: D
+Correct Answer: B
+--------------------------------------------------
+
+Question 2:
+Q: What does AWS Snowball provide? (Choose TWO)
+Your Answer: ['A', 'C']
+Correct Answer: ['A', 'E']
+--------------------------------------------------
+
+Question 3:
+Q: An organization has a large number of technical employees who operate their AWS Cloud infrastructure. What does AWS provide to help organize them into teams and then assign the appropriate permissions for each team?
+Your Answer: D
+Correct Answer: C
+--------------------------------------------------
+
+Question 4:
+Q: What do you gain from setting up consolidated billing for five different AWS accounts under another master account?
+Your Answer: D
+Correct Answer: C
+--------------------------------------------------
+
+Question 5:
+Q: What should you do in order to keep the data on EBS volumes safe? (Choose TWO)
+Your Answer: ['A']
+Correct Answer: ['B', 'C']
+--------------------------------------------------
+
+Question 6:
+Q: One of the most important AWS best-practices to follow is the cloud architecture principle of elasticity. How does this principle improve your architecture’s design?
+Your Answer: A
+Correct Answer: D
+--------------------------------------------------
+
+Question 7:
+Q: Which of the following does NOT belong to the AWS Cloud Computing models?
+Your Answer: B
+Correct Answer: D
+--------------------------------------------------
+
+Question 8:
+Q: A company is deploying a new two-tier web application in AWS. Where should the most frequently accessed data be stored so that the application’s response time is optimal?
+Your Answer: B
+Correct Answer: D
+--------------------------------------------------
+
+Question 9:
+Q: You want to run a questionnaire application for only one day (without interruption), which Amazon EC2 purchase option should you use?
+Your Answer: C
+Correct Answer: D
+--------------------------------------------------
+
+Question 10:
+Q: You are working on a project that involves creating thumbnails of millions of images. Consistent uptime is not an issue, and continuous processing is not required. Which EC2 buying option would be the most cost-effective?
+Your Answer: A
+Correct Answer: D
+--------------------------------------------------
+
+Question 11:
+Q: Which of the following services allows customers to manage their agreements with AWS?
+Your Answer: B
+Correct Answer: A
+--------------------------------------------------
+
+Question 12:
+Q: Which of the following are examples of AWS-Managed Services, where AWS is responsible for the operational and maintenance burdens of running the service? (Choose TWO)
+Your Answer: ['C', 'E']
+Correct Answer: ['B', 'C']
+--------------------------------------------------
+
+Question 13:
+Q: You have AWS Basic support, and you have discovered that some AWS resources are being used maliciously, and those resources could potentially compromise your data. What should you do?
+Your Answer: A
+Correct Answer: B
+--------------------------------------------------
+
+Question 14:
+Q: Select TWO examples of the AWS shared controls.
+Your Answer: ['B', 'D']
+Correct Answer: ['A', 'D']
+--------------------------------------------------
+
+Question 15:
+Q: A company is planning to host an educational website on AWS. Their video courses will be streamed all around the world. Which of the following AWS services will help achieve high transfer speeds?
+Your Answer: B
+Correct Answer: D
+--------------------------------------------------
+
+Question 16:
+Q: A developer is planning to build a two-tier web application that has a MySQL database layer. Which of the following AWS database services would provide automated backups for the application?
+Your Answer: D
+Correct Answer: B
+--------------------------------------------------
+
+Question 17:
+Q: Under the shared responsibility model, which of the following is the responsibility of AWS?
+Your Answer: C
+Correct Answer: B
+--------------------------------------------------
+
+Question 18:
+Q: What does the AWS Health Dashboard provide? (Choose TWO)
+Your Answer: ['A', 'D']
+Correct Answer: ['A', 'E']
+--------------------------------------------------
+
+Question 19:
+Q: Which of the following is not a benefit of Amazon S3? (Choose TWO)
+Your Answer: ['A', 'B']
+Correct Answer: ['B', 'D']
+--------------------------------------------------
+
+Question 20:
+Q: What does AWS provide to deploy popular technologies such as IBM MQ on AWS with the least amount of effort and time?
+Your Answer: D
+Correct Answer: C
+--------------------------------------------------
+
+Question 21:
+Q: An organization has decided to purchase an Amazon EC2 Reserved Instance (RI) for three years in order to reduce costs. It is possible that the application workloads could change during the reservation period. What is the EC2 Reserved Instance (RI) type that will allow the company to exchange the purchased reserved instance for another reserved instance with higher computing power if they need to?
+Your Answer: A
+Correct Answer: D
+--------------------------------------------------
+
