@@ -1,0 +1,24 @@
+{
+  "session_date": "2025-11-01T22:52:17.408930",
+  "exam_title": "TDojo Exam 2",
+  "total_questions": 65,
+  "quiz_mode": {
+    "score": 1,
+    "total_answered": 2,
+    "wrong_answers": [
+      {
+        "question_id": 2,
+        "question": "Which of the following is the most cost-effective AWS Support Plan to use if you need access to AWS Support API for programmatic case management?",
+        "your_answer": "Developer",
+        "correct_answer": "Business"
+      }
+    ]
+  },
+  "timer_data": {
+    "elapsed_seconds": 31,
+    "completed": false,
+    "auto_saved": true,
+    "emergency_saved": true,
+    "quit_by_user": false
+  }
+}
